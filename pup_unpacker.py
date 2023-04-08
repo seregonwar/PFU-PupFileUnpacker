@@ -3,13 +3,18 @@ import struct
 import sys
 import tempfile
 from tkinter import Tk, Label, Button, DISABLED, messagebox, filedialog
+from tkinter import *
+from tkinter import ttk
+import sys
+sys.path.append('C:\\Users\\marco\\Desktop\\ps4_dec_pup_info-master')
+import ps4_dec_pup_info
 
 try:
-    os.system('pip install git+https://github.com/SocraticBliss/ps4_dec_pup_info')
+    os.system('pip install git+https://github.com/seregonwar/Pup-file-extractor/blob/main/ps4_dec_pup_info.py')
     PS4_DEC_PUP_INFO_INSTALLED = True
 except ImportError:
     PS4_DEC_PUP_INFO_INSTALLED = False
-    print("La libreria ps4_dec_pup_info non è installata.")
+    print("La libreria ps4_dec_pup_info non e installata.")
 
 
 class PupUnpacker:
@@ -75,13 +80,13 @@ class PupUnpacker:
 with open(file_path, 'rb') as f:
     header = f.read(HEADER_SIZE)
     if not header.startswith(MAGIC):
-        raise ValueError(f"Il file {pup_name} non è un PUP valido.")
-    version = header[4:8]
+       raise ValueError(f"Il file {pup_name} non e un PUP valido.")
+       version = header[4:8]
     if version != VERSION:
-        raise ValueError(f"La versione del file {pup_name} non è supportata.")
+        raise ValueError(f"La versione del file {pup_name} non e supportata.")
     mode = header[8:12]
     if mode not in MODES:
-        raise ValueError(f"Il modo del file {pup_name} non è supportato.")
+        raise ValueError(f"Il modo del file {pup_name} non e supportato.")
     size = int.from_bytes(header[16:20], byteorder='little')
     sha1_hash = header[28:48]
     padding = header[HEADER_SIZE-PADDING_SIZE:]
@@ -167,11 +172,12 @@ class Pup:
             f.write(entry_data)
     
     # Mostra un messaggio di conferma all'utente
-    messagebox.showinfo("Informazione", "L'estrazione è stata completata con successo.")
-#Esegue l'applicazione
-if name == 'main':
-root = Tk()
-pup_unpacker = PupUnpacker(root)
+    messagebox.showinfo("Informazione", "L'estrazione e stata completata con successo.")
+# Esegue l'applicazione
+if __name__ == '__main__':
+    root = Tk()
+    pup_unpacker = PupUnpacker(root)
+
 def parse_pkg_file_header(self):
     """
     Parses the header of the pkg file and sets the attributes of the PupFile object.
@@ -186,11 +192,9 @@ def parse_pkg_file_header(self):
     self.pkg_file_header.pkg_digest_table_offset = self.read_uint32()
     self.pkg_file_header.pkg_digest_table_size = self.read_uint32()
     self.pkg_file_header.pkg_digest = self.read_bytes(20)
-    def extract_files(self, output_dir):
-    """
-    Extracts all files from the PUP archive to the specified output directory.
-    """
-    self.seek(self.pkg_file_header.pkg_hdr_size)
+
+def extract_files(self, output_dir):
+    new_var = self.seek(self.pkg_file_header.pkg_hdr_size)
     for file in self.files:
         if file.dest == 1: # Solo per PS4
             file_path = os.path.join(output_dir, file.name)
@@ -201,77 +205,84 @@ def parse_pkg_file_header(self):
                 f.write(self.read(file.size))
 
 
+
 root.mainloop()
-    # Etichetta del titolo
-    self.title_label = Label(master, text="Seregon PUP Unpacker")
-    self.title_label.pack()
+class PupUnpacker:
+    def __init__(self, master):
+        self.master = master
+        master.title("Seregon PUP Unpacker")
 
-    # Etichetta per mostrare il percorso del file selezionato
-    self.file_label = Label(master, text="")
-    self.file_label.pack()
+        # Etichetta del titolo
+        self.title_label = Label(master, text="Seregon PUP Unpacker")
+        self.title_label.pack()
 
-    # Pulsante per selezionare il file
-    self.select_file_button = Button(master, text="Seleziona file", command=self.select_file)
-    self.select_file_button.pack()
+        # Etichetta per mostrare il percorso del file selezionato
+        self.file_label = Label(master, text="")
+        self.file_label.pack()
 
-    # Pulsante per estrarre i file
-    self.extract_button = Button(master, text="Estrai file", state=DISABLED, command=self.extract_pup)
-    self.extract_button.pack()
+        # Pulsante per selezionare il file
+        self.select_file_button = Button(master, text="Seleziona file", command=self.select_file)
+        self.select_file_button.pack()
 
-def select_file(self):
-    # Apre la finestra di dialogo per selezionare il file
-    file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.pup")])
+        # Pulsante per estrarre i file
+        self.extract_button = Button(master, text="Estrai file", state=DISABLED, command=self.extract_pup)
+        self.extract_button.pack()
 
-    # Aggiorna l'etichetta con il percorso del file selezionato
-    self.file_label.configure(text=file_path)
+    def select_file(self):
+        # Apre la finestra di dialogo per selezionare il file
+        file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.pup")])
 
-    # Abilita il pulsante per l'estrazione solo se il file selezionato ha estensione .pup
-    if file_path.lower().endswith('.pup'):
-        self.extract_button.configure(state=NORMAL)
-    else:
-        self.extract_button.configure(state=DISABLED)
+        # Aggiorna l'etichetta con il percorso del file selezionato
+        self.file_label.configure(text=file_path)
 
-def extract_pup(self):
-    # Ottiene il percorso del file selezionato
-    file_path = self.file_label.cget('text')
+        # Abilita il pulsante per l'estrazione solo se il file selezionato ha estensione .pup
+        if file_path.lower().endswith('.pup'):
+            self.extract_button.configure(state=NORMAL)
+        else:
+            self.extract_button.configure(state=DISABLED)
 
-    if not os.path.exists(file_path):
-        messagebox.showerror("Errore", f"Il file {file_path} non esiste.")
-        return
+    def extract_pup(self):
+        # Ottiene il percorso del file selezionato
+        file_path = self.file_label.cget('text')
 
-    # Crea una directory temporanea per l'estrazione dei file
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # Estrae i file dal file .pup nella directory temporanea
-        try:
-            if PS4_DEC_PUP_INFO_INSTALLED:
-                ps4_dec_pup_info.extract_pup(file_path, temp_dir)
-            else:
-                from pup_extractor import extract_pup
-                extract_pup(file_path, temp_dir)
-        except Exception as e:
-            messagebox.showerror("Errore", f"Errore durante l'estrazione del file {file_path}: {str(e)}")
+        if not os.path.exists(file_path):
+            messagebox.showerror("Errore", f"Il file {file_path} non esiste.")
             return
 
-        # Crea una directory con lo stesso nome del file .pup nella stessa cartella
-        # e salva i file estratti al suo interno
-        dir_path = os.path.dirname(file_path)
-        pup_name = os.path.splitext(os.path.basename(file_path))[0]
+        # Crea una directory temporanea per l'estrazione dei file
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Estrae i file dal file .pup nella directory temporanea
+            try:
+                if PS4_DEC_PUP_INFO_INSTALLED:
+                    ps4_dec_pup_info.extract_pup(file_path, temp_dir)
+                else:
+                    from pup_extractor import extract_pup
+                    extract_pup(file_path, temp_dir)
+            except Exception as e:
+                messagebox.showerror("Errore", f"Errore durante l'estrazione del file {file_path}: {str(e)}")
+                return
 
-        with open(file_path, 'rb') as f:
+
+        # Crea una directory con lo stesso nome del file .pup nella stessa cartella
+dir_path = os.path.dirname(file_path)
+pup_name = os.path.splitext(os.path.basename(file_path))[0]
+
+with open(file_path, 'rb') as f:
     header = f.read(HEADER_SIZE)
     if not header.startswith(MAGIC):
-        raise ValueError(f"Il file {pup_name} non è un PUP valido.")
+        raise ValueError(f"Il file {pup_name} non e un PUP valido.")
     version = header[4:8]
     if version != VERSION:
-        raise ValueError(f"La versione del file {pup_name} non è supportata.")
+        raise ValueError(f"La versione del file {pup_name} non e supportata.")
     mode = header[8:12]
     if mode not in MODES:
-        raise ValueError(f"Il modo del file {pup_name} non è supportato.")
+        raise ValueError(f"Il modo del file {pup_name} non e supportato.")
     size = int.from_bytes(header[16:20], byteorder='little')
     sha1_hash = header[28:48]
     padding = header[HEADER_SIZE-PADDING_SIZE:]
     if padding != PADDING:
         raise ValueError(f"Il file {pup_name} non ha il padding corretto.")
+
     # Definizione della classe Pup
     # Costruisce la lista dei file nel PUP
     self.entry_table = []
@@ -300,24 +311,27 @@ def extract_all(self, output_dir):
 def extract_file(self, output_dir, file_name):
     """Estrae un singolo file dal PUP nella directory di output specificata"""
     # Cerca il file nella lista dei file del PUP
-    entry = None
-    for e in self.entry_table:
-        if e[0] == file_name:
-            entry = e
-            break
-    if not entry:
-        raise ValueError(f"Il file {file_name} non è presente nel PUP.")
+entry = None
+for e in self.entry_table:
+    if e[0] == file_name:
+        entry = e
+        break
+if not entry:
+    raise ValueError(f"Il file {file_name} non e presente nel PUP.")
+
     # Estrae il file nella directory di output
-    entry_name, entry_offset, entry_size = entry
-    with open(os.path.join(output_dir, entry_name), 'wb') as f:
-        f.write(self.buffer[entry_offset:entry_offset+entry_size])
+entry_name, entry_offset, entry_size = entry
+with open(os.path.join(output_dir, entry_name), 'wb') as f:
+    f.write(self.buffer[entry_offset:entry_offset+entry_size])
+
 class PupUnpacker:
-def init(self, master):
-self.master = master
-master.title("Seregon PUP Unpacker")
-    # Etichetta del titolo
-    self.title_label = Label(master, text="Seregon PUP Unpacker")
-    self.title_label.pack()
+    def __init__(self, master):
+        self.master = master
+        master.title("Seregon PUP Unpacker")
+        # Etichetta del titolo
+        self.title_label = Label(master, text="Seregon PUP Unpacker")
+        self.title_label.pack()
+
 
     # Etichetta per mostrare il percorso del file selezionato
     self.file_label = Label(master, text="")
@@ -347,15 +361,15 @@ def select_file(self):
 
         # Verifica che il file sia un PUP valido
         if magic != Pup.MAGIC:
-            raise ValueError(f"Il file {pup_name} non è un PUP valido.")
+            raise ValueError(f"Il file {pup_name} non e un PUP valido.")
         
         # Verifica che la versione del file sia supportata
         if version != Pup.VERSION:
-            raise ValueError(f"La versione del file {pup_name} non è supportata.")
+            raise ValueError(f"La versione del file {pup_name} non e supportata.")
         
         # Verifica che il modo del file sia supportato
         if mode != Pup.MODE:
-            raise ValueError(f"Il modo del file {pup_name} non è supportato.")
+            raise ValueError(f"Il modo del file {pup_name} non e supportato.")
         
         # Inizializza l'attributo entry_table come una lista vuota
         self.entry_table = []
