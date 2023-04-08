@@ -8,10 +8,17 @@ from tkinter import ttk
 import sys
 sys.path.append('C:\\Users\\marco\\Desktop\\ps4_dec_pup_info-master')
 import ps4_dec_pup_info
-import zlib
+import lzma
+file_path = os.path.join(os.getcwd(), 'nome_del_tuo_file.pup')
+# Definisci la funzione per aprire la finestra di dialogo e selezionare il file .pup
+def select_file():
+    root = tk.Tk()
+    root.withdraw()
+    file_path = filedialog.askopenfilename(filetypes=[('PUP files', '*.pup')])
+    return file_path
 
 try:
-    os.system('pip install zlib-state')
+    os.system('pip install import lzma')
     PS4_DEC_PUP_INFO_INSTALLED = True
 except ImportError:
     PS4_DEC_PUP_INFO_INSTALLED = False
@@ -130,11 +137,19 @@ class Pup:
     def __init__(self, file_path):
         # Estrae il nome del file senza l'estensione
         pup_name = os.path.splitext(os.path.basename(file_path))[0]
-        
-        # Legge il contenuto del file in una variabile buffer
-        with open(file_path, 'rb') as f:
-            buffer = f.read()
-        
+# Definisci la funzione per aprire la finestra di dialogo e selezionare il file .pup
+def select_file():
+    root = tk.Tk()
+    root.withdraw()
+    file_path = filedialog.askopenfilename(filetypes=[('PUP files', '*.pup')])
+    return file_path
+
+# Seleziona il file .pup tramite finestra di dialogo
+file_path = select_file()
+
+# Legge il contenuto del file in una variabile buffer
+with open(file_path, 'rb') as f:
+    buffer = f.read()        
         # Controlla se il padding è corretto
         padding_len = len(buffer) % 16
         if padding_len != 0:
@@ -186,8 +201,7 @@ class Pup:
         entry_hash = entry[5]
         entry_data_offset = entry[6]
         entry_data_size = entry_compressed_size if entry_compression else entry_uncompressed_size
-        entry_data = zlib.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])        
-        # Calcola il nome del file e crea il percorso completo
+        entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])        # Calcola il nome del file e crea il percorso completo
         file_name = f"{i:06d}.bin"
         file_path = os.path.join(pup_dir_path, file_name)
         
@@ -198,9 +212,9 @@ class Pup:
     # Mostra un messaggio di conferma all'utente
     messagebox.showinfo("Informazione", "L'estrazione e stata completata con successo.")
 # Esegue l'applicazione
-if __name__ == '__main__':
-    root = Tk()
-    pup_unpacker = PupUnpacker(root)
+    if __name__ == '__main__':
+      root = Tk()
+      pup_unpacker = PupUnpacker(root)
 
 def parse_pkg_file_header(self):
     """
