@@ -1,12 +1,4 @@
 #!/usr/bin/env python
-'''
-'
-' PS4 Decrypted PUP Information by SocraticBliss (R)
-'
-' Major Thanks to flatz <3
-'
-'''
-
 import struct
 import sys
 
