@@ -8,13 +8,14 @@ from tkinter import ttk
 import sys
 sys.path.append('C:\\Users\\marco\\Desktop\\ps4_dec_pup_info-master')
 import ps4_dec_pup_info
+import zlib
 
 try:
-    os.system('pip install git+https://github.com/seregonwar/Pup-file-extractor')
+    os.system('pip install zlib-state')
     PS4_DEC_PUP_INFO_INSTALLED = True
 except ImportError:
     PS4_DEC_PUP_INFO_INSTALLED = False
-    print("La libreria ps4_dec_pup_info non e installata.")
+    print("La libreria zlib non e installata.")
 
 
 class PupUnpacker:
@@ -34,15 +35,19 @@ class PupUnpacker:
         self.select_file_button = Button(master, text="Seleziona file", command=self.select_file)
         self.select_file_button.pack()
 
-        class PupUnpacker:
-    def __init__(self, master):
+class PupUnpacker:
+   
+     def __init__(self, master):
+        self.master = master
+        ...
+
         ...
         self.extract_button = Button(master, text="Estrai file", state=DISABLED, command=self.extract_pup)
         self.extract_button.pack()
 
 
 
-    def select_file(self):
+     def select_file(self):
         # Apre la finestra di dialogo per selezionare il file
         self.file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.pup")])
         # Aggiorna l'etichetta con il percorso del file selezionato
@@ -181,8 +186,7 @@ class Pup:
         entry_hash = entry[5]
         entry_data_offset = entry[6]
         entry_data_size = entry_compressed_size if entry_compression else entry_uncompressed_size
-        entry_data = buffer[entry_data_offset:entry_data_offset+entry_data_size]
-        
+        entry_data = zlib.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])        
         # Calcola il nome del file e crea il percorso completo
         file_name = f"{i:06d}.bin"
         file_path = os.path.join(pup_dir_path, file_name)
