@@ -1,14 +1,38 @@
-import os
-import struct
-import sys
+import os;
+import struct;
+import sys;
 import tempfile
-from tkinter import Tk, Label, Button, DISABLED, messagebox, filedialog
-from tkinter import *
-from tkinter import ttk
+from tkinter import Tk, Label, Button, DISABLED, messagebox, filedialog;
+from tkinter import *;
+from tkinter import ttk;
 import sys
 sys.path.append('C:\\Users\\marco\\Desktop\\ps4_dec_pup_info-master')
 import ps4_dec_pup_info
 import lzma
+import sys 
+sys.path.append ('C:\\Users\\marco\\source\\repos\\Pupfile\\Pupfile')
+import Pupfile
+import argparse
+os.system ('npm install figlet')
+
+# Define GUI
+gui = """
+  
+ ________  _______   ________  _______   ________  ________  ________          
+|\   ____\|\  ___ \ |\   __  \|\  ___ \ |\   ____\|\   __  \|\   ___  \        
+\ \  \___|\ \   __/|\ \  \|\  \ \   __/|\ \  \___|\ \  \|\  \ \  \\ \  \       
+ \ \_____  \ \  \_|/_\ \   _  _\ \  \_|/_\ \  \  __\ \  \\\  \ \  \\ \  \      
+  \|____|\  \ \  \_|\ \ \  \\  \\ \  \_|\ \ \  \|\  \ \  \\\  \ \  \\ \  \     
+    ____\_\  \ \_______\ \__\\ _\\ \_______\ \_______\ \_______\ \__\\ \__\    
+   |\_________\|_______|\|__|\|__|\|_______|\|_______|\|_______|\|__| \|__|    
+   \|_________|                                                                
+                                                                               
+                                                                               
+
+                    ~Created by: SEREGON~
+             REMINDER THIS WAS BUILT FOR EDUCATIONAL PURPOSES
+               SO DON'T USE THIS FOR EVIL ACTIVITIES.
+"""
 # Definisci la funzione per aprire la finestra di dialogo e selezionare il file .pup
 def select_file():
     root = Tk()
