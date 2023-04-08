@@ -9,7 +9,16 @@ import sys
 sys.path.append('C:\\Users\\marco\\Desktop\\ps4_dec_pup_info-master')
 import ps4_dec_pup_info
 import lzma
-file_path = os.path.join(os.getcwd(), 'nome_del_tuo_file.pup')
+# Definisci la funzione per aprire la finestra di dialogo e selezionare il file .pup
+def select_file():
+    root = Tk()
+    root.withdraw()
+    file_path = filedialog.askopenfilename(filetypes=[('PUP files', '*.pup')])
+    return file_path
+
+# Seleziona il file .pup tramite finestra di dialogo
+file_path = select_file()
+
 # Definisci la funzione per aprire la finestra di dialogo e selezionare il file .pup
 def select_file():
     root = tk.Tk()
@@ -149,24 +158,25 @@ file_path = select_file()
 
 # Legge il contenuto del file in una variabile buffer
 with open(file_path, 'rb') as f:
-    buffer = f.read()        
-        # Controlla se il padding è corretto
-        padding_len = len(buffer) % 16
-        if padding_len != 0:
-            raise ValueError(f"Il file {pup_name} non ha il padding corretto.")
+    buffer = f.read()
+    
+    # Controlla se il padding è corretto
+    padding_len = len(buffer) % 16
+    if padding_len != 0:
+        raise ValueError(f"Il file {pup_name} non ha il padding corretto.")
         
-        # Estrae le informazioni dal buffer
-        magic = buffer[:8]
-        version = buffer[8:12]
-        mode = buffer[12:16]
-        entry_table_offset = struct.unpack("<Q", buffer[32:40])[0]
-        entry_table_size = struct.unpack("<Q", buffer[40:48])[0]
-        entry_table_count = entry_table_size // 24
+    # Estrae le informazioni dal buffer
+    magic = buffer[:8]
+    version = buffer[8:12]
+    mode = buffer[12:16]
+    entry_table_offset = struct.unpack("<Q", buffer[32:40])[0]
+    entry_table_size = struct.unpack("<Q", buffer[40:48])[0]
+    entry_table_count = entry_table_size // 24
         
-        # Controlla se il valore MAGIC è corretto
-        if magic != Pup.MAGIC:
-            raise ValueError(f"Il file {pup_name} non ha il valore MAGIC corretto.")
-        
+    # Controlla se il valore MAGIC è corretto
+    if magic != Pup.MAGIC:
+        raise ValueError(f"Il file {pup_name} non ha il valore MAGIC corretto.")
+
         # Controlla se la versione è supportata
         if version != Pup.VERSION:
             raise ValueError(f"Il file {pup_name} ha una versione non supportata.")
