@@ -172,6 +172,35 @@ class Pup:
 if name == 'main':
 root = Tk()
 pup_unpacker = PupUnpacker(root)
+def parse_pkg_file_header(self):
+    """
+    Parses the header of the pkg file and sets the attributes of the PupFile object.
+    """
+    self.pkg_file_header.magic = self.read_bytes(4)
+    self.pkg_file_header.pkg_type = self.read_uint32()
+    self.pkg_file_header.pkg_hdr_size = self.read_uint16()
+    self.pkg_file_header.pkg_file_size = self.read_uint32() # Aggiunto
+    self.pkg_file_header.pkg_encrypted_segments = self.read_uint32()
+    self.pkg_file_header.pkg_file_segments = self.read_uint32()
+    self.pkg_file_header.pkg_total_segments = self.read_uint32()
+    self.pkg_file_header.pkg_digest_table_offset = self.read_uint32()
+    self.pkg_file_header.pkg_digest_table_size = self.read_uint32()
+    self.pkg_file_header.pkg_digest = self.read_bytes(20)
+    def extract_files(self, output_dir):
+    """
+    Extracts all files from the PUP archive to the specified output directory.
+    """
+    self.seek(self.pkg_file_header.pkg_hdr_size)
+    for file in self.files:
+        if file.dest == 1: # Solo per PS4
+            file_path = os.path.join(output_dir, file.name)
+            dir_path = os.path.dirname(file_path)
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
+            with open(file_path, 'wb') as f:
+                f.write(self.read(file.size))
+
+
 root.mainloop()
     # Etichetta del titolo
     self.title_label = Label(master, text="Seregon PUP Unpacker")
