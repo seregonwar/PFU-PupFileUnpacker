@@ -10,7 +10,7 @@ sys.path.append('C:\\Users\\marco\\Desktop\\ps4_dec_pup_info-master')
 import ps4_dec_pup_info
 
 try:
-    os.system('pip install git+https://github.com/seregonwar/Pup-file-extractor/blob/main/ps4_dec_pup_info.py')
+    os.system('pip install git+https://github.com/seregonwar/Pup-file-extractor')
     PS4_DEC_PUP_INFO_INSTALLED = True
 except ImportError:
     PS4_DEC_PUP_INFO_INSTALLED = False
@@ -34,15 +34,35 @@ class PupUnpacker:
         self.select_file_button = Button(master, text="Seleziona file", command=self.select_file)
         self.select_file_button.pack()
 
-        # Pulsante per estrarre i file
+        class PupUnpacker:
+    def __init__(self, master):
+        ...
         self.extract_button = Button(master, text="Estrai file", state=DISABLED, command=self.extract_pup)
         self.extract_button.pack()
 
+
+
     def select_file(self):
         # Apre la finestra di dialogo per selezionare il file
-        file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.pup")])
-
+        self.file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.pup")])
         # Aggiorna l'etichetta con il percorso del file selezionato
+        self.file_label.configure(text=self.file_path)
+
+
+
+def extract_file(self):
+    # Apre la finestra di dialogo per selezionare il percorso dove salvare il file estratto
+    save_path = filedialog.asksaveasfilename(defaultextension=".bin")
+    # Estrae il file
+    if self.file_path and save_path:
+        with open(self.file_path, "rb") as f:
+            pup_data = f.read()
+            dec_data = dec_pup(pup_data)
+            with open(save_path, "wb") as fw:
+                fw.write(dec_data)
+    else:
+        messagebox.showerror("Error", "You must select a file to extract and a path to save the extracted file.")       
+ # Aggiorna l'etichetta con il percorso del file selezionato
         self.file_label.configure(text=file_path)
 
         # Abilita il pulsante per l'estrazione solo se il file selezionato ha estensione .pup
