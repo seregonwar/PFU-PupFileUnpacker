@@ -6,11 +6,11 @@ from tkinter import Tk, Label, Button, DISABLED, messagebox, filedialog;
 from tkinter import *;
 from tkinter import ttk;
 import sys
-sys.path.append('C:\\Users\\marco\\Desktop\\ps4_dec_pup_info-master')
+sys.path.append('C:\\Users\\name\\Desktop\\ps4_dec_pup_info-master')
 import ps4_dec_pup_info
 import lzma
 import sys 
-sys.path.append ('C:\\Users\\marco\\source\\repos\\Pupfile\\Pupfile')
+sys.path.append ('C:\\Users\\name\\source\\repos\\Pupfile\\Pupfile')
 import Pupfile
 import argparse
 os.system ('npm install figlet')
@@ -184,7 +184,7 @@ file_path = select_file()
 with open(file_path, 'rb') as f:
     buffer = f.read()
     
-    # Controlla se il padding è corretto
+    # Controlla se il padding Ã¨ corretto
     padding_len = len(buffer) % 16
     if padding_len != 0:
         raise ValueError(f"Il file {pup_name} non ha il padding corretto.")
@@ -197,15 +197,15 @@ with open(file_path, 'rb') as f:
     entry_table_size = struct.unpack("<Q", buffer[40:48])[0]
     entry_table_count = entry_table_size // 24
         
-    # Controlla se il valore MAGIC è corretto
+    # Controlla se il valore MAGIC Ã¨ corretto
     if magic != Pup.MAGIC:
         raise ValueError(f"Il file {pup_name} non ha il valore MAGIC corretto.")
 
-        # Controlla se la versione è supportata
+        # Controlla se la versione Ã¨ supportata
         if version != Pup.VERSION:
             raise ValueError(f"Il file {pup_name} ha una versione non supportata.")
         
-        # Controlla se il valore MODE è corretto
+        # Controlla se il valore MODE Ã¨ corretto
         if mode != Pup.MODE:
             raise ValueError(f"Il file {pup_name} ha un valore MODE non supportato.")
         
