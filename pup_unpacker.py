@@ -37,8 +37,7 @@ gui = """
 def select_file():
     root = Tk()
     root.withdraw()
-    file_path = filedialog.askopenfilename(filetypes=[('PUP files', '*.pup')])
-    return file_path
+    return filedialog.askopenfilename(filetypes=[('PUP files', '*.pup')])
 
 # Seleziona il file .pup tramite finestra di dialogo
 file_path = select_file()
@@ -47,8 +46,7 @@ file_path = select_file()
 def select_file():
     root = tk.Tk()
     root.withdraw()
-    file_path = filedialog.askopenfilename(filetypes=[('PUP files', '*.pup')])
-    return file_path
+    return filedialog.askopenfilename(filetypes=[('PUP files', '*.pup')])
 
 try:
     os.system('pip install import lzma')
@@ -145,8 +143,7 @@ def extract_file(self):
 with open(file_path, 'rb') as f:
     header = f.read(HEADER_SIZE)
     if not header.startswith(MAGIC):
-       raise ValueError(f"Il file {pup_name} non e un PUP valido.")
-       version = header[4:8]
+        raise ValueError(f"Il file {pup_name} non e un PUP valido.")
     if version != VERSION:
         raise ValueError(f"La versione del file {pup_name} non e supportata.")
     mode = header[8:12]
@@ -174,8 +171,7 @@ class Pup:
 def select_file():
     root = tk.Tk()
     root.withdraw()
-    file_path = filedialog.askopenfilename(filetypes=[('PUP files', '*.pup')])
-    return file_path
+    return filedialog.askopenfilename(filetypes=[('PUP files', '*.pup')])
 
 # Seleziona il file .pup tramite finestra di dialogo
 file_path = select_file()
@@ -183,12 +179,12 @@ file_path = select_file()
 # Legge il contenuto del file in una variabile buffer
 with open(file_path, 'rb') as f:
     buffer = f.read()
-    
+
     # Controlla se il padding è corretto
     padding_len = len(buffer) % 16
     if padding_len != 0:
         raise ValueError(f"Il file {pup_name} non ha il padding corretto.")
-        
+
     # Estrae le informazioni dal buffer
     magic = buffer[:8]
     version = buffer[8:12]
@@ -196,36 +192,21 @@ with open(file_path, 'rb') as f:
     entry_table_offset = struct.unpack("<Q", buffer[32:40])[0]
     entry_table_size = struct.unpack("<Q", buffer[40:48])[0]
     entry_table_count = entry_table_size // 24
-        
+
     # Controlla se il valore MAGIC è corretto
     if magic != Pup.MAGIC:
         raise ValueError(f"Il file {pup_name} non ha il valore MAGIC corretto.")
 
-        # Controlla se la versione è supportata
-        if version != Pup.VERSION:
-            raise ValueError(f"Il file {pup_name} ha una versione non supportata.")
-        
-        # Controlla se il valore MODE è corretto
-        if mode != Pup.MODE:
-            raise ValueError(f"Il file {pup_name} ha un valore MODE non supportato.")
-        
-        # Estrae la tabella delle voci di entrata
-        entry_table_data = buffer[entry_table_offset:entry_table_offset+entry_table_size]
-        entry_table = []
-        for i in range(entry_table_count):
-            entry = struct.unpack("<24xQQ8x", entry_table_data[i*24:])
-            entry_table.append(entry)
-        self.entry_table = entry_table
-            # Crea un'istanza della classe Pup con le informazioni estratte dal buffer
+                # Crea un'istanza della classe Pup con le informazioni estratte dal buffer
     pup = Pup(file_path, magic, version, mode, entry_table_offset, entry_table_count)
-    
+
     # Crea una directory con lo stesso nome del file .pup nella stessa cartella
     # e salva i file estratti al suo interno
     dir_path = os.path.dirname(file_path)
     pup_dir_path = os.path.join(dir_path, pup_name)
     if not os.path.exists(pup_dir_path):
         os.makedirs(pup_dir_path)
-    
+
     for i, entry in enumerate(pup.entry_table):
         entry_type = entry[0]
         entry_flags = entry[1]
@@ -238,11 +219,11 @@ with open(file_path, 'rb') as f:
         entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])        # Calcola il nome del file e crea il percorso completo
         file_name = f"{i:06d}.bin"
         file_path = os.path.join(pup_dir_path, file_name)
-        
+
         # Salva il file nella directory
         with open(file_path, 'wb') as f:
             f.write(entry_data)
-    
+
     # Mostra un messaggio di conferma all'utente
     messagebox.showinfo("Informazione", "L'estrazione e stata completata con successo.")
 # Esegue l'applicazione
@@ -383,11 +364,7 @@ def extract_all(self, output_dir):
 def extract_file(self, output_dir, file_name):
     """Estrae un singolo file dal PUP nella directory di output specificata"""
     # Cerca il file nella lista dei file del PUP
-entry = None
-for e in self.entry_table:
-    if e[0] == file_name:
-        entry = e
-        break
+entry = next((e for e in self.entry_table if e[0] == file_name), None)
 if not entry:
     raise ValueError(f"Il file {file_name} non e presente nel PUP.")
 
