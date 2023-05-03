@@ -8,7 +8,7 @@ class Pup():
                  'FILE_SIZE', 'PADDING_2', 'BLOB_COUNT', 'FLAGS_2', 'PADDING_3')
     
     def __init__(self, f):
-    
+
         self.MAGIC        = struct.unpack('4B', f.read(4))
         self.VERSION      = struct.unpack('<B', f.read(1))[0]
         self.MODE         = struct.unpack('<B', f.read(1))[0]
@@ -24,10 +24,10 @@ class Pup():
         self.BLOB_COUNT   = struct.unpack('<H', f.read(2))[0]
         self.FLAGS_2      = struct.unpack('<H', f.read(2))[0]
         self.PADDING_3    = struct.unpack('4x', f.read(4))
-        
+
         # Blobs
-        Pup.BLOBS = [Blob(f) for blob in range(self.BLOB_COUNT)]
-        
+        Pup.BLOBS = [Blob(f) for _ in range(self.BLOB_COUNT)]
+
         f.seek(0)
     
     def __str__(self):
@@ -90,13 +90,13 @@ class Blob():
         self.TYPE         = self.type(id)
         self.COMPRESSED   = 'True' if self.FLAGS & 0x8 == 0x8 else 'False'
         self.BLOCKED      = 'True' if self.FLAGS & 0x800 == 0x800 else 'False'
-        
+
         print('')
         print('0x%02X - %s'                  % (entry, self.type(self.ID)))
         print('  Flags:                0x%X' % self.FLAGS)
         print('    Id:         0x%X'         % self.ID)
-        print('    Compressed: %s'           % self.COMPRESSED)
-        print('    Blocked:    %s'           % self.BLOCKED)
+        print(f'    Compressed: {self.COMPRESSED}')
+        print(f'    Blocked:    {self.BLOCKED}')
         print('  File Offset:          0x%X' % self.OFFSET)
         print('  File Size:            0x%X' % self.FILE_SIZE)
         print('  Memory Size:          0x%X' % self.MEMORY_SIZE)
