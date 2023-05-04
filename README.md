@@ -1,4 +1,4 @@
-# PS4 Pup-file-extractor
+# Pup-file-extractor
                                                             
                                                                                
                                                                                
