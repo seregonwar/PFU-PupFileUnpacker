@@ -1,16 +1,14 @@
 import os;
 import struct;
-import sys;
 import tempfile
 from tkinter import Tk, Label, Button, DISABLED, messagebox, filedialog;
 from tkinter import *;
 from tkinter import ttk;
 import sys
-sys.path.append('C:\\Users\\name\\Desktop\\ps4_dec_pup_info-master')
+sys.path.append('C:\\Users\\marco\\Desktop\\ps4_dec_pup_info-master')
 import ps4_dec_pup_info
-import lzma
-import sys 
-sys.path.append ('C:\\Users\\name\\source\\repos\\Pupfile\\Pupfile')
+import lzma 
+sys.path.append ('C:\\Users\\marco\\source\\repos\\Pupfile\\Pupfile')
 import Pupfile
 import argparse
 os.system ('npm install figlet')
@@ -446,6 +444,5 @@ def select_file(self):
             
     # Versione del file supportata dalla classe Pup
     VERSION = b'\x00\x00\x00\x01'
-
-
-
+   
+   #THE END OF PROGRAM
