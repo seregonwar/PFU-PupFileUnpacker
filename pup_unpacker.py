@@ -5,10 +5,8 @@ from tkinter import Tk, Label, Button, DISABLED, messagebox, filedialog;
 from tkinter import *;
 from tkinter import ttk;
 import sys
-sys.path.append('C:\\Users\\marco\\Desktop\\ps4_dec_pup_info-master')
 import ps4_dec_pup_info
 import lzma 
-sys.path.append ('C:\\Users\\marco\\source\\repos\\Pupfile\\Pupfile')
 import Pupfile
 import argparse
 os.system ('npm install figlet')
