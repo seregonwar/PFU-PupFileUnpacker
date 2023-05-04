@@ -3,9 +3,9 @@
                                                                                
                                                                                
 
-                                                   ~Created by: SEREGON~
-                                         REMINDER THIS WAS BUILT FOR EDUCATIONAL PURPOSES
-                                            SO DON'T USE THIS FOR EVIL ACTIVITIES.
+                                                ~Created by: SEREGON~
+                                      REMINDER THIS WAS BUILT FOR EDUCATIONAL PURPOSES
+                                           SO DON'T USE THIS FOR EVIL ACTIVITIES.
 
 #description 
 Pup-file-extractor is a simple and intuitive program developed with the aim of supporting the world of reverse engineering in the analysis of previously unpacked .pup firmware files update for ps4. This tool can help users to easily extract and analyze the data present in these files, providing useful information to understand their content.
