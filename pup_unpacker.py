@@ -10,7 +10,8 @@ import lzma
 import Pupfile
 import argparse
 os.system ('npm install figlet')
-
+import tkinter as tk
+import pup_decoder
 # Define GUI
 gui = """
   
@@ -88,29 +89,41 @@ class PupUnpacker:
         self.file_label.configure(text=self.file_path)
 
 
-
 def extract_file(self):
-    # Apre la finestra di dialogo per selezionare il percorso dove salvare il file estratto
-    save_path = filedialog.asksaveasfilename(defaultextension=".bin")
-    # Estrae il file
-    if self.file_path and save_path:
-        with open(self.file_path, "rb") as f:
-            pup_data = f.read()
-            dec_data = dec_pup(pup_data)
-            with open(save_path, "wb") as fw:
-                fw.write(dec_data)
-    else:
-        messagebox.showerror("Error", "You must select a file to extract and a path to save the extracted file.")       
- # Aggiorna l'etichetta con il percorso del file selezionato
-        self.file_label.configure(text=file_path)
 
-        # Abilita il pulsante per l'estrazione solo se il file selezionato ha estensione .pup
-        if file_path.lower().endswith('.pup'):
-            self.extract_button.configure(state=NORMAL)
-        else:
-            self.extract_button.configure(state=DISABLED)
+  save_path = filedialog.asksaveasfilename()
 
-    def extract_pup(self):
+  if not self.file_path or not save_path:
+    messagebox.showerror("Error", "Select input and output files")
+    return
+
+  if not self.file_path.endswith(".pup"):
+    messagebox.showerror("Error", "Input file must be a PUP")
+    return
+
+  # Leggi il PUP
+  with open(self.file_path, "rb") as f:
+    data = f.read()
+
+  # Decodifica 
+  files = pup_decoder.dec_pup(data)
+
+  # Salva primo file estratto
+  if files:
+    outfile = files[0]
+    with open(save_path,"wb") as fw:
+      fw.write(open(outfile,"rb").read())
+  
+  else:
+    messagebox.showerror("Error", "No files extracted from PUP")
+
+  # Aggiorna percorso GUI
+  self.file_label.configure(text=self.file_path)
+
+  # Abilita pulsante estrazione
+  self.extract_button.configure(state=NORMAL)
+
+  def extract_pup(self):
         # Ottiene il percorso del file selezionato
         file_path = self.file_label.cget('text')
 
@@ -125,7 +138,7 @@ def extract_file(self):
                 if PS4_DEC_PUP_INFO_INSTALLED:
                     ps4_dec_pup_info.extract_pup(file_path, temp_dir)
                 else:
-                    from pup_extractor import extract_pup
+                    from pup_unpacker import extract_pup
                     extract_pup(file_path, temp_dir)
             except Exception as e:
                 messagebox.showerror("Errore", f"Errore durante l'estrazione del file {file_path}: {str(e)}")
@@ -136,31 +149,40 @@ def extract_file(self):
             dir_path = os.path.dirname(file_path)
             pup_name = os.path.splitext(os.path.basename(file_path))[0]
 
-with open(file_path, 'rb') as f:
+# Costanti definite altrove
+HEADER_SIZE = 192
+MAGIC = b'\x01\x4F\xC1\x0A'  
+VERSION = 1
+MODES = [b'\x07\x00\x00\x00']
+PADDING_SIZE = 16
+PADDING = b'\x00' * PADDING_SIZE
+
+def validate_header(file_path):
+
+  pup_name = os.path.basename(file_path)
+
+  with open(file_path, 'rb') as f:
     header = f.read(HEADER_SIZE)
-    if not header.startswith(MAGIC):
-        raise ValueError(f"Il file {pup_name} non e un PUP valido.")
-    if version != VERSION:
-        raise ValueError(f"La versione del file {pup_name} non e supportata.")
-    mode = header[8:12]
-    if mode not in MODES:
-        raise ValueError(f"Il modo del file {pup_name} non e supportato.")
-    size = int.from_bytes(header[16:20], byteorder='little')
-    sha1_hash = header[28:48]
-    padding = header[HEADER_SIZE-PADDING_SIZE:]
-    if padding != PADDING:
-        raise ValueError(f"Il file {pup_name} non ha il padding corretto.")
-    # Definizione della classe Pup
-class Pup:
-    __slots__ = ('MAGIC', 'VERSION', 'MODE', 'END', 'entry_table')
-    # Definizione dei valori MAGIC e MODE
-    MAGIC = b'\x01\x4F\xC1\x0A\x00\x00\x00\x00'
-    MODE = b'\x07\x00\x00\x00'
-    # Definizione del valore END
-    END = b'\x45\x4E\x44\x00'
+
+  if not header.startswith(MAGIC):
+    raise ValueError(f"Invalid magic number in {pup_name}")
+
+   # estrarre dall'header
+
+  if version != VERSION:
+    raise ValueError(f"Unsupported version in {pup_name}")
+
+  mode = header[8:12]
+
+  if mode not in MODES:
+    raise ValueError(f"Invalid mode in {pup_name}")
+
+  # resto del codice di validazione
+
+  return True # header valido
     
     # Costruttore della classe Pup
-    def __init__(self, file_path):
+def __init__(self, file_path):
         # Estrae il nome del file senza l'estensione
         pup_name = os.path.splitext(os.path.basename(file_path))[0]
 # Definisci la funzione per aprire la finestra di dialogo e selezionare il file .pup
@@ -169,12 +191,15 @@ def select_file():
     root.withdraw()
     return filedialog.askopenfilename(filetypes=[('PUP files', '*.pup')])
 
-# Seleziona il file .pup tramite finestra di dialogo
-file_path = select_file()
+if __name__ == '__main__':
+    file_path = select_file()
 
-# Legge il contenuto del file in una variabile buffer
-with open(file_path, 'rb') as f:
-    buffer = f.read()
+    # Estrae il nome del file dalla path
+    pup_name = os.path.basename(file_path)
+
+    # Legge il contenuto del file in una variabile buffer
+    with open(file_path, 'rb') as f:
+        buffer = f.read()
 
     # Controlla se il padding è corretto
     padding_len = len(buffer) % 16
@@ -193,7 +218,7 @@ with open(file_path, 'rb') as f:
     if magic != Pup.MAGIC:
         raise ValueError(f"Il file {pup_name} non ha il valore MAGIC corretto.")
 
-                # Crea un'istanza della classe Pup con le informazioni estratte dal buffer
+    # Crea un'istanza della classe Pup con le informazioni estratte dal buffer
     pup = Pup(file_path, magic, version, mode, entry_table_offset, entry_table_count)
 
     # Crea una directory con lo stesso nome del file .pup nella stessa cartella
@@ -212,16 +237,18 @@ with open(file_path, 'rb') as f:
         entry_hash = entry[5]
         entry_data_offset = entry[6]
         entry_data_size = entry_compressed_size if entry_compression else entry_uncompressed_size
-        entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])        # Calcola il nome del file e crea il percorso completo
+        entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])
+        
+        # Calcola il nome del file e crea il percorso completo
         file_name = f"{i:06d}.bin"
         file_path = os.path.join(pup_dir_path, file_name)
-
+        
         # Salva il file nella directory
         with open(file_path, 'wb') as f:
             f.write(entry_data)
 
     # Mostra un messaggio di conferma all'utente
-    messagebox.showinfo("Informazione", "L'estrazione e stata completata con successo.")
+    messagebox.showinfo("Informazione", "L'estrazione è stata completata con successo.")
 # Esegue l'applicazione
     if __name__ == '__main__':
       root = Tk()
