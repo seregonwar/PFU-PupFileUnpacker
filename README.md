@@ -1,3 +1,9 @@
+![Work In Progress](https://img.shields.io/badge/Work%20In%20Progress-Yes-green)
+![Python 3.11](https://img.shields.io/badge/Python-3.11-blue)
+![Version](https://img.shields.io/badge/version-1.0-green)
+![GitHub Stars](https://img.shields.io/github/stars/seregonwar/PS4-pup-file-extractor?color=yellow)
+![License](https://img.shields.io/badge/license-GNU-red)
+
 # Pup File Extractor
 
 Python tool to extract and analyze PS4 PUP firmware update files.
