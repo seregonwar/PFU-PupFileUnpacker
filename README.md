@@ -1,65 +1,60 @@
-![Work In Progress](https://img.shields.io/badge/Work%20In%20Progress-Yes-green)
-![Python 3.11](https://img.shields.io/badge/Python-3.11-blue)
-![Version](https://img.shields.io/badge/version-beta-green)
-![GitHub Stars](https://img.shields.io/github/stars/seregonwar/PS4-pup-file-extractor?color=yellow)
-![License](https://img.shields.io/badge/license-GNU-red)
+# APFU - PS4 Pup File Extractor
 
-# Pup File Extractor
+![Python 3.11](https://img.shields.io/badge/Python-3.11-blue) 
+![Version](https://img.shields.io/badge/version-1.0-brightgreen)
+![GitHub stars](https://img.shields.io/github/stars/seregonwar/Pup-file-extractor?style=social)
+![License](https://img.shields.io/badge/license-MIT-red)
 
-Python tool to extract and analyze PS4 PUP firmware update files.
+APFU is a Python tool to extract and analyze PS4 firmware update (PUP) files. It provides an easy way to unpack and inspect the contents of PUP packages.
 
-## Description
+## Features
 
-Pup-file-extractor is a simple and intuitive program developed with the aim of supporting the world of reverse engineering in analyzing previously extracted .pup PS4 firmware update files. This tool can help users easily extract and analyze the data in these files, providing useful information to understand their content.
-
-## Installation
-
-To install and run Pup File Extractor:
-
-1. Clone the repository: ```git clone https://github.com/seregonwar/Pup-file-extractor```
-2. Install dependencies: ```pip install -r requirements.txt ```
-3. Run the script: ```python pup_unpacker.py```
+- Extracts all files and metadata from PUP archives
+- Prints extensive details on package contents including:
+  - Firmware version
+  - Number of files contained
+  - Installation instructions
+  - File paths
+  - File sizes
+  - SHA-256 hashes
+- Intuitive GUI for selecting PUP files to unpack
+- Saves extracted files to output directory
+- Actively maintained and open source
 
 ## Usage
 
-To use the tool:
+### Dependencies
 
-1. Run the Python script pup_unpacker.py
+APFU requires Python 3 and the following modules:
 
-2. Select the PUP file via the file dialog
+- tkinter
+- struct
+- lzma
 
-3. Files contained in the PUP will be extracted to the same folder
+Install dependencies with:
 
+### Basic Usage
 
-## Dependencies
+1. Clone the GitHub repository
+2. Install dependencies 
+3. Run the script with `python pup_unpacker.py`
+4. Use the file dialog to select a PUP file
+5. Contents will be extracted to the working directory 
 
-- Tkinter for the GUI
-- struct to parse the binary  
-- lzma for decompression
+### Advanced Usage
 
-## License 
+The `pup_unpacker.py` script has extensive documentation on all functions and classes. Developers can easily integrate PUP extraction features into their own applications.
 
-This project is released under the MIT License.
+See the [wiki](https://github.com/seregonwar/Pup-file-extractor/wiki) for further usage details.
 
-## Credits
+## Credits 
 
-I utilized code written by [SocraticBliss](https://github.com/SocraticBliss) to implement several functions in my pup_unpacker.py file. Specifically, I used their code to extract information from PS4 PUP files, and I feel compelled to give credit where credit is due. If you're interested, you can find their original code in the ps4_dec_pup_info repository on GitHub [here](https://github.com/SocraticBliss/ps4_dec_pup_info).
+The PUP extraction logic was adapted from [ps4_dec_pup_info](https://github.com/SocraticBliss/ps4_dec_pup_info) by [SocraticBliss](https://github.com/SocraticBliss).
 
-For anyone curious about how I incorporated their code into mine, feel free to check out my pup_unpacker.py file in my Pup-file-extractor repository on GitHub: https://github.com/seregonwar/Pup-file-extractor/blob/main/pup_unpacker.py.
+## License
 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-```
-________  _______   ________  _______   ________  ________  ________          
-|\   ____\|\  ___ \ |\   __  \|\  ___ \ |\   ____\|\   __  \|\   ___  \        
-\ \  \___|\ \   __/|\ \  \|\  \ \   __/|\ \  \___|\ \  \|\  \ \  \\ \  \       
- \ \_____  \ \  \_|/_\ \   _  _\ \  \_|/_\ \  \  __\ \  \\\  \ \  \\ \  \      
-  \|____|\  \ \  \_|\ \ \  \\  \\ \  \_|\ \ \  \|\  \ \  \\\  \ \  \\ \  \     
-    ____\_\  \ \_______\ \__\\ _\\ \_______\ \_______\ \_______\ \__\\ \__\    
-   |\_________\|_______|\|__|\|__|\|_______|\|_______|\|_______|\|__| \|__|    
-   \|_________|                                                                 
-                
-                                                                               
+## Disclaimer 
 
-                    Created by: SEREGON
-             REMINDER THIS WAS BUILT FOR EDUCATIONAL PURPOSES
-               SO DON'T USE THIS FOR EVIL ACTIVITIES. ```   
+This tool is for educational and investigative purposes only. Do not use it for illegal activities.
