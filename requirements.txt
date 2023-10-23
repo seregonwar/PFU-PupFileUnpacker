@@ -1,0 +1,8 @@
+lzma==0.5.3
+numpy==1.23.5
+pip==22.3.1
+ps4-dec-pup-info==1.0
+pup-decoder==0.1.0
+setuptools==65.5.0
+struct==1.20
+Tkinter==3.10
