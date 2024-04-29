@@ -1,71 +1,70 @@
-import os
-import struct
-import zlib
-import logging
-from contextlib import closing
+import os                                           # Importing the os module for various operating system functions
+import struct                                        # Importing the struct module for manipulating packed binary data
+import zlib                                         # Importing the zlib module for data compression and decompression
+import logging                                       # Importing the logging module for logging program messages
+from contextlib import closing                       # Importing the closing context manager from contextlib
 
-# Costanti
-MAGIC = b'\x01\x4F\xC1\x0A' 
-VER1, VER2 = 1, 2 # Versioni supportate
-HEADER_SIZE = 192
-ENTRY_SIZE = 32
+# Constants
+MAGIC = b'\x01\x4F\xC1\x0A'                          # Magic number for identifying PUP files
+VER1, VER2 = 1, 2                                    # Supported versions of PUP files
+HEADER_SIZE = 192                                    # Size of the PUP file header
+ENTRY_SIZE = 32                                      # Size of each file entry in the PUP file
 
 def dec_pup(data, output_dir='.', version=2, loglevel=logging.INFO):
-  """
-  Estrae e decodifica i file contenuti in un file PUP PS4.
+    """
+    Extracts and decodes the files contained in a PUP PS4 file.
 
-  Parameters:
-  data (bytes): Dati binari del file PUP
-  output_dir (str): Cartella dove salvare i file estratti
-  version (int): Versione del formato PUP
-  loglevel (int): Livello di logging 
+    Parameters:
+    data (bytes): Binary data of the PUP file
+    output_dir (str): Directory where extracted files will be saved
+    version (int): Version of the PUP format
+    loglevel (int): Logging level
 
-  Returns:
-  files (list): Elenco dei file estratti
-  """
+    Returns:
+    files (list): List of extracted files
+    """
+    # Configuring logging
+    logging.basicConfig(level=loglevel)               # Setting the logging level
 
-  # Configura il logging
-  logging.basicConfig(level=loglevel)
+    # Verifying header
+    if data[:4] != MAGIC:
+        raise ValueError("Invalid magic number")      # Raising a ValueError if the magic number is invalid
 
-  # Verifica header
-  if data[:4] != MAGIC:
-    raise ValueError("Magic number non valido")
+    logging.info("Valid PUP file, decoding begins...") # Logging a message indicating that the PUP file is valid
 
-  logging.info("File PUP valido, inizio decodifica...")
+    # Reading header
+    header = data[:HEADER_SIZE]                       # Reading the header data
+    ver, num_files = struct.unpack_from('<2I', header, 4) # Extracting the version and number of files from the header
 
-  # Leggi header 
-  header = data[:HEADER_SIZE]
-  ver, num_files = struct.unpack_from('<2I', header, 4)
+    if ver not in [VER1, VER2]:
+        raise ValueError(f"Unsupported PUP version {ver}") # Raising a ValueError if the PUP version is not supported
 
-  if ver not in [VER1, VER2]:
-    raise ValueError(f"Versione PUP {ver} non supportata") 
+    # Decoding file loop
+    offset, files = HEADER_SIZE, []                 # Initializing the offset and files list
+    for i in range(num_files):
 
-  # Ciclo di decodifica file
-  offset, files = HEADER_SIZE, []
-  for i in range(num_files):
+        # Reading entry and extracting metadata
+        entry = data[offset:offset+ENTRY_SIZE]         # Reading the entry data
+        file_offset, file_size = struct.unpack_from('<2Q', entry, 8) # Extracting the file offset and size from the entry
+        compression_type = entry[:4]                  # Extracting the compression type from the entry
 
-    # Leggi entry ed estrai metadata
-    entry = data[offset:offset+ENTRY_SIZE]
-    file_offset, file_size = struct.unpack_from('<2Q', entry, 8)
-    compression_type = entry[:4]
+        logging.debug(f"Decoding file {i+1}/{num_files}") # Logging a message indicating the current file being decoded
 
-    logging.debug(f"Decodifico file {i+1}/{num_files}")
+        # Reading and extracting file data
+        with closing(io.BytesIO(data[file_offset:file_offset+file_size])) as stream: # Creating a BytesIO object for reading the file data
+            file_data = stream.read()                                               # Reading the file data
 
-    # Leggi ed estrai contenuto file  
-    with closing(io.BytesIO(data[file_offset:file_offset+file_size])) as stream:
-      file_data = stream.read()  
+        if compression_type == b'zlib':             # If the file is compressed with zlib
+            file_data = zlib.decompress(file_data) # Decompressing the file data
 
-    if compression_type == b'zlib':
-      file_data = zlib.decompress(file_data)
+        # Saving to file system
+        outfile = os.path.join(output_dir, f"file{i+1}.bin") # Constructing the output file path
+        with open(outfile, 'wb') as f:              # Opening the output file in binary write mode
+            f.write(file_data)                       # Writing the file data to the output file
 
-    # Salva su file system
-    outfile = os.path.join(output_dir, f"file{i+1}.bin")
-    with open(outfile, 'wb') as f:
-      f.write(file_data)
+        files.append(outfile)                       # Adding the output file path to the files list
+        offset += ENTRY_SIZE                         # Incrementing the offset
 
-    files.append(outfile)
-    offset += ENTRY_SIZE
-  
-  logging.info(f"Decodifica completata, file salvati in {output_dir}")
+    logging.info(f"Decoding complete, files saved to {output_dir}") # Logging a message indicating that the decoding is complete
 
-  return files
+    return files                                     # Returning the list of extracted files
