@@ -1,23 +1,14 @@
 #!/usr/bin/env python
-
 import struct
 import sys
 
 class Pup():
-    """
-    Class representing a PS4 PUP file.
-    Unpacks and stores the information of the PUP file header and blobs.
-    """
     __slots__ = ('MAGIC', 'VERSION', 'MODE', 'ENDIAN', 'FLAGS',
                  'CONTENT', 'PRODUCT', 'PADDING', 'HEADER_SIZE', 'META_SIZE',
                  'FILE_SIZE', 'PADDING_2', 'BLOB_COUNT', 'FLAGS_2', 'PADDING_3')
-
+    
     def __init__(self, f):
-        """
-        Initializes the Pup class with a file object.
-        Unpacks the header information and stores the blob objects in the BLOBS class variable.
-        """
-        # Magic, Version, Mode, Endianness, Flags, Content, Product
+    
         self.MAGIC        = struct.unpack('4B', f.read(4))
         self.VERSION      = struct.unpack('<B', f.read(1))[0]
         self.MODE         = struct.unpack('<B', f.read(1))[0]
@@ -25,28 +16,22 @@ class Pup():
         self.FLAGS        = struct.unpack('<B', f.read(1))[0]
         self.CONTENT      = struct.unpack('<B', f.read(1))[0]
         self.PRODUCT      = struct.unpack('<B', f.read(1))[0]
-
-        # PADDING, HEADER_SIZE, META_SIZE, FILE_SIZE, BLOB_COUNT, FLAGS_2
         self.PADDING      = struct.unpack('2x', f.read(2))
         self.HEADER_SIZE  = struct.unpack('<H', f.read(2))[0]
         self.META_SIZE    = struct.unpack('<H', f.read(2))[0]
         self.FILE_SIZE    = struct.unpack('<I', f.read(4))[0]
-
-        # PADDING_2, BLOB_COUNT, FLAGS_2, PADDING_3
         self.PADDING_2    = struct.unpack('4x', f.read(4))
         self.BLOB_COUNT   = struct.unpack('<H', f.read(2))[0]
         self.FLAGS_2      = struct.unpack('<H', f.read(2))[0]
         self.PADDING_3    = struct.unpack('4x', f.read(4))
-
+        
         # Blobs
         Pup.BLOBS = [Blob(f) for blob in range(self.BLOB_COUNT)]
-
+        
         f.seek(0)
-
+    
     def __str__(self):
-        """
-        Prints the formatted header information of the PUP file.
-        """
+        
         print('Target: PS4')
         print('SONY Header:')
         print('  Magic:                0x' + ''.join(format(byte, '2X') for byte in self.MAGIC))
@@ -61,29 +46,23 @@ class Pup():
         print('  File Size:            0x%X'         % self.FILE_SIZE)
         print('  Number of Blobs:      0x%X\t\t(%i)' % (self.BLOB_COUNT, self.BLOB_COUNT))
         print('  Flags:                0x%X'         % self.FLAGS_2)
-
+    
     def endian(self):
-        """
-        Returns the endianness as a string.
-        """
+        
         return {
             0x0 : 'Big Endian',
             0x1 : 'Little Endian',
         }.get(self.ENDIAN, 'Missing Endian!!!')
-
+    
     def content(self):
-        """
-        Returns the content type as a string.
-        """
+        
         return {
             0x1 : 'ELF',
             0x4 : 'PUP',
         }.get(self.CONTENT, 'Missing Content Type!!!')
-
+    
     def product(self):
-        """
-        Returns the product type as a string.
-        """
+        
         return {
             0x0 : 'PUP',
             0x8 : 'ELF',
@@ -92,34 +71,26 @@ class Pup():
             0xE : 'SM',
             0xF : 'SL',
         }.get(self.PRODUCT, 'Missing Product Type!!!')
+    
 
 class Blob():
-    """
-    Class representing a PUP file blob.
-    Unpacks and stores the information of the blob.
-    """
     __slots__ = ('FLAGS', 'OFFSET', 'FILE_SIZE', 'MEMORY_SIZE', 
                  'ID', 'TYPE', 'COMPRESSED', 'BLOCKED')
-
+    
     def __init__(self, f):
-        """
-        Initializes the Blob class with a file object.
-        Unpacks the blob information and stores the values.
-        """
+        
         self.FLAGS        = struct.unpack('<Q', f.read(8))[0]
         self.OFFSET       = struct.unpack('<Q', f.read(8))[0]
         self.FILE_SIZE    = struct.unpack('<Q', f.read(8))[0]
         self.MEMORY_SIZE  = struct.unpack('<Q', f.read(8))[0]
-
+    
+    def __str__(self, entry):
+        
         self.ID           = self.FLAGS >> 20
-        self.TYPE         = self.type(self.ID)
+        self.TYPE         = self.type(id)
         self.COMPRESSED   = 'True' if self.FLAGS & 0x8 == 0x8 else 'False'
         self.BLOCKED      = 'True' if self.FLAGS & 0x800 == 0x800 else 'False'
-
-    def __str__(self, entry):
-        """
-        Prints the formatted blob information.
-        """
+        
         print('')
         print('0x%02X - %s'                  % (entry, self.type(self.ID)))
         print('  Flags:                0x%X' % self.FLAGS)
@@ -129,11 +100,9 @@ class Blob():
         print('  File Offset:          0x%X' % self.OFFSET)
         print('  File Size:            0x%X' % self.FILE_SIZE)
         print('  Memory Size:          0x%X' % self.MEMORY_SIZE)
-
+    
     def type(self, type):
-        """
-        Returns the blob type as a string.
-        """
+        
         return {
             0x1   : 'emc_ipl.slb',
             0x2   : 'eap_kbl.slb',
@@ -160,7 +129,7 @@ class Blob():
             # 0x17 - 0x1F
             0x20  : 'emc_ipl.slb',
             0x21  : 'eap_kbl.slb',
-            0x22  : 'torus2_fw.bin',
+            0x22  : 'torus2_fw.slb',
             0x23  : 'sam_ipl.slb',
             0x24  : 'emc_ipl.slb',
             0x25  : 'eap_kbl.slb',
@@ -200,13 +169,12 @@ class Blob():
             0xF02 : '', # watermark
             0xF03 : '', # watermark
         }.get(type, 'Missing')
+    
 
 # PROGRAM START
 
 def main(argc, argv):
-    """
-    The main function that processes the input PUP file and prints the information.
-    """
+    
     # Load in our decrypted PS4 PUP file
     try:
         with open(argv[1], 'rb') as INPUT:
