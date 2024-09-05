@@ -1,37 +1,25 @@
 import struct
-import argparse
 import os
-import argparse
-os.system ('npm install figlet')
 
-# Define GUI
-gui = """
-  
- ________  _______   ________  _______   ________  ________  ________          
-|\   ____\|\  ___ \ |\   __  \|\  ___ \ |\   ____\|\   __  \|\   ___  \        
-\ \  \___|\ \   __/|\ \  \|\  \ \   __/|\ \  \___|\ \  \|\  \ \  \\ \  \       
- \ \_____  \ \  \_|/_\ \   _  _\ \  \_|/_\ \  \  __\ \  \\\  \ \  \\ \  \      
-  \|____|\  \ \  \_|\ \ \  \\  \\ \  \_|\ \ \  \|\  \ \  \\\  \ \  \\ \  \     
-    ____\_\  \ \_______\ \__\\ _\\ \_______\ \_______\ \_______\ \__\\ \__\    
-   |\_________\|_______|\|__|\|__|\|_______|\|_______|\|_______|\|__| \|__|    
-   \|_________|                                                                
-                                                                               
-                                                                               
-
-                    ~Created by: SEREGON~
-             REMINDER THIS WAS BUILT FOR EDUCATIONAL PURPOSES
-               SO DON'T USE THIS FOR EVIL ACTIVITIES.
-"""
 HEADER_SIZE = 192
 BLOCK_SIZE = 512
 
 def read_pup_file(filepath):
+    """
+    Legge un file PUP e restituisce le informazioni sui file contenuti.
+
+    Parameters:
+    filepath (str): Percorso del file PUP
+
+    Returns:
+    dict: Informazioni sui file contenuti nel PUP
+    """
     # Apriamo il file in modalità binaria e leggiamo l'intero contenuto
     with open(filepath, 'rb') as file:
         content = file.read()
 
     # Verifichiamo che sia effettivamente un file PUP controllando i primi byte
-    if content[:3] != b'PUP':
+    if content[:4] != b'PUP ':
         raise ValueError("File is not a PUP file")
 
     # Leggiamo l'header del file PUP
@@ -72,5 +60,6 @@ def read_pup_file(filepath):
         'file_count': file_count,
         'files': files
     }
+
 #end program :)
 

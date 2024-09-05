@@ -7,14 +7,14 @@ from tkinter import filedialog, messagebox
 class Pup:
     MAGIC = b'MYPUP123'
 
-    def __init__(self, file_path, magic, version, mode, entry_table_offset, entry_table_count):
+    def __init__(self, file_path, magic, version, mode, entry_table_offset, entry_table_count, entry_table):
         self.file_path = file_path
         self.magic = magic
         self.version = version
         self.mode = mode
         self.entry_table_offset = entry_table_offset
         self.entry_table_count = entry_table_count
-        self.entry_table = []  # You need to populate this with your actual entry data
+        self.entry_table = entry_table
 
 def select_file():
     root = tk.Tk()
@@ -41,20 +41,26 @@ def extract_pup_file():
     version = buffer[8:12]
     mode = buffer[12:16]
     entry_table_offset = struct.unpack("<Q", buffer[32:40])[0]
-    entry_table_size = struct.unpack("<Q", buffer[40:48])[0]
-    entry_table_count = entry_table_size // 24
+    entry_table_count = struct.unpack("<I", buffer[48:52])[0]
 
     # Controlla se il valore MAGIC è corretto
     if magic != Pup.MAGIC:
         raise ValueError(f"Il file {pup_name} non ha il valore MAGIC corretto.")
 
+    # Estrae la tabella delle entry
+    entry_table = []
+    for i in range(entry_table_count):
+        offset = entry_table_offset + i * 24
+        entry = struct.unpack("<6sIHQQI", buffer[offset:offset+24])
+        entry_table.append(entry)
+
     # Crea un'istanza della classe Pup con le informazioni estratte dal buffer
-    pup = Pup(file_path, magic, version, mode, entry_table_offset, entry_table_count)
+    pup = Pup(file_path, magic, version, mode, entry_table_offset, entry_table_count, entry_table)
 
     # Crea una directory con lo stesso nome del file .pup nella stessa cartella
     # e salva i file estratti al suo interno
     dir_path = os.path.dirname(file_path)
-    pup_dir_path = os.path.join(dir_path, pup_name)
+    pup_dir_path = os.path.join(dir_path, pup_name[:-4])
     if not os.path.exists(pup_dir_path):
         os.makedirs(pup_dir_path)
 
@@ -67,7 +73,11 @@ def extract_pup_file():
         entry_hash = entry[5]
         entry_data_offset = entry[6]
         entry_data_size = entry_compressed_size if entry_compression else entry_uncompressed_size
-        entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])
+
+        if entry_compression:
+            entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])
+        else:
+            entry_data = buffer[entry_data_offset:entry_data_offset+entry_data_size]
 
         # Calcola il nome del file e crea il percorso completo
         file_name = f"{i:06d}.bin"

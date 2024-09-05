@@ -16,14 +16,27 @@ def decrypt_pup(input_file, output_file):
         # Verifica l'header del file PUP
         magic, version, file_size, checksum, table_offset = struct.unpack_from('<4sIQQQ', data, 0)
         print(f"Magic letto: {magic}")
-        if magic != b'PUP ':
-            raise ValueError("File non valido: Magic Number errato")
+        print(f"Version: {version}, File Size: {file_size}, Checksum: {checksum}, Table Offset: {table_offset}")
 
-        print(f"Magic: {magic}, Version: {version}, File Size: {file_size}, Checksum: {checksum}, Table Offset: {table_offset}")
+        # Verifica se il magic number è 'SLB2'
+        if magic != b'SLB2':
+            raise ValueError("Magic number non valido. Atteso 'SLB2'.")
+
+        # Aggiungi una stampa di debug per verificare la lunghezza dei dati
+        print(f"Lunghezza dei dati letti: {len(data)}")
 
         # Esegui la decifrazione delle sezioni cifrate
         cipher = AES.new(KEY, AES.MODE_CBC, IV)
-        decrypted_data = unpad(cipher.decrypt(data[table_offset:]), AES.block_size)
+        encrypted_data = data[table_offset:]
+        print(f"Lunghezza dei dati cifrati: {len(encrypted_data)}")
+
+        decrypted_data = cipher.decrypt(encrypted_data)
+        print(f"Lunghezza dei dati decifrati: {len(decrypted_data)}")
+
+        # Aggiungi una stampa di debug per verificare i dati decifrati prima del padding
+        print(f"Dati decifrati (prima del padding): {decrypted_data[:64]}...")
+
+        decrypted_data = unpad(decrypted_data, AES.block_size)
 
         with open(output_file, 'wb') as f:
             f.write(decrypted_data)

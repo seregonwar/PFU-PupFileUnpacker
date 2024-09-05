@@ -3,13 +3,17 @@ import os
 import struct
 import zlib
 import logging
-from contextlib import closing
+from contextlib import contextmanager
 
 # Costanti
-MAGIC = b'\x01\x4F\xC1\x0A' 
+MAGIC = b'\x01\x4F\xC1\x0A'
 VER1, VER2 = 1, 2 # Versioni supportate
 HEADER_SIZE = 192
 ENTRY_SIZE = 32
+
+@contextmanager
+def nullcontext():
+    yield
 
 def dec_pup(data, output_dir='.', version=2, loglevel=logging.INFO):
   """
@@ -53,16 +57,21 @@ def dec_pup(data, output_dir='.', version=2, loglevel=logging.INFO):
     logging.debug(f"Decodifico file {i+1}/{num_files}")
 
     # Leggi ed estrai contenuto file  
-    with closing(io.BytesIO(data[file_offset:file_offset+file_size])) as stream:
-      file_data = stream.read()  
+    with nullcontext() as stream:
+      if file_size > 0:
+        stream = io.BytesIO(data[file_offset:file_offset+file_size])
+      file_data = stream.read()
 
     if compression_type == b'zlib':
       file_data = zlib.decompress(file_data)
 
     # Salva su file system
     outfile = os.path.join(output_dir, f"file{i+1}.bin")
-    with open(outfile, 'wb') as f:
-      f.write(file_data)
+    try:
+      with open(outfile, 'wb') as f:
+        f.write(file_data)
+    except Exception as e:
+      logging.error(f"Errore durante la scrittura del file {outfile}: {e}")
 
     files.append(outfile)
     offset += ENTRY_SIZE
