@@ -1,9 +1,9 @@
-import os;
-import struct;
+import os
+import struct
 import tempfile
-from tkinter import Tk, Label, Button, DISABLED, messagebox, filedialog;
-from tkinter import *;
-from tkinter import ttk;
+from tkinter import Tk, Label, Button, DISABLED, messagebox, filedialog
+from tkinter import *
+from tkinter import ttk
 import sys
 import ps4_dec_pup_info
 import lzma 
@@ -12,6 +12,8 @@ import argparse
 os.system ('npm install figlet')
 import tkinter as tk
 import pup_decoder
+import subprocess
+
 # Define GUI
 gui = """
   
@@ -19,8 +21,8 @@ gui = """
 |\   ____\|\  ___ \ |\   __  \|\  ___ \ |\   ____\|\   __  \|\   ___  \        
 \ \  \___|\ \   __/|\ \  \|\  \ \   __/|\ \  \___|\ \  \|\  \ \  \\ \  \       
  \ \_____  \ \  \_|/_\ \   _  _\ \  \_|/_\ \  \  __\ \  \\\  \ \  \\ \  \      
-  \|____|\  \ \  \_|\ \ \  \\  \\ \  \_|\ \ \  \|\  \ \  \\\  \ \  \\ \  \     
-    ____\_\  \ \_______\ \__\\ _\\ \_______\ \_______\ \_______\ \__\\ \__\    
+  \|____|\  \ \_______\ \__\\  \\ \_______\ \_______\ \_______\ \__\\ \__\     
+    ____\_\  \ \_______|\|__|\|__|\|_______|\|_______|\|_______|\|__| \|__|    
    |\_________\|_______|\|__|\|__|\|_______|\|_______|\|_______|\|__| \|__|    
    \|_________|                                                                
                                                                                
@@ -34,7 +36,7 @@ gui = """
 def select_file():
     root = Tk()
     root.withdraw()
-    return filedialog.askopenfilename(filetypes=[('PUP files', '*.PUP.dec')])
+    return filedialog.askopenfilename(filetypes=[('PUP files', '*.PUP')])
 
 # Seleziona il file .pup tramite finestra di dialogo
 file_path = select_file()
@@ -43,7 +45,7 @@ file_path = select_file()
 def select_file():
     root = tk.Tk()
     root.withdraw()
-    return filedialog.askopenfilename(filetypes=[('PUP files', '*.PUP.dec')])
+    return filedialog.askopenfilename(filetypes=[('PUP files', '*.PUP')])
 
 try:
     os.system('pip install import lzma')
@@ -52,6 +54,19 @@ except ImportError:
     PS4_DEC_PUP_INFO_INSTALLED = False
     print("La libreria zlib non e installata.")
 
+def convert_pup_to_dec(file_path):
+    dec_file_path = file_path + ".dec"
+    # Comando per convertire il file .PUP in .PUP.dec
+    command = f"python pup_decrypt_tool.py {file_path} {dec_file_path}"
+    try:
+        print(f"Eseguendo comando: {command}")
+        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+        print(f"Output del comando: {result.stdout}")
+        print(f"Errori del comando: {result.stderr}")
+    except subprocess.CalledProcessError as e:
+        print(f"Errore durante l'esecuzione del comando: {e}")
+        raise RuntimeError(f"Errore durante la conversione del file {file_path}: {str(e)}")
+    return dec_file_path
 
 class PupUnpacker:
     def __init__(self, master):
@@ -70,60 +85,22 @@ class PupUnpacker:
         self.select_file_button = Button(master, text="Seleziona file", command=self.select_file)
         self.select_file_button.pack()
 
-class PupUnpacker:
-   
-     def __init__(self, master):
-        self.master = master
-        ...
-
-        ...
+        # Pulsante per estrarre i file
         self.extract_button = Button(master, text="Estrai file", state=DISABLED, command=self.extract_pup)
         self.extract_button.pack()
 
-
-
-     def select_file(self):
+    def select_file(self):
         # Apre la finestra di dialogo per selezionare il file
-        self.file_path = filedialog.askopenfilename(filetypes=[("PUP files#", "*.PUP.dec")])
+        self.file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.PUP")])
         # Aggiorna l'etichetta con il percorso del file selezionato
         self.file_label.configure(text=self.file_path)
+        # Abilita il pulsante per l'estrazione solo se il file selezionato ha estensione .pup
+        if self.file_path.lower().endswith('.pup'):
+            self.extract_button.configure(state=NORMAL)
+        else:
+            self.extract_button.configure(state=DISABLED)
 
-
-def extract_file(self):
-
-  save_path = filedialog.asksaveasfilename()
-
-  if not self.file_path or not save_path:
-    messagebox.showerror("Error", "Select input and output files")
-    return
-
-  if not self.file_path.endswith("*.PUP.dec"):
-    messagebox.showerror("Error", "Input file must be a PUP")
-    return
-
-  # Leggi il PUP
-  with open(self.file_path, "rb") as f:
-    data = f.read()
-
-  # Decodifica 
-  files = pup_decoder.dec_pup(data)
-
-  # Salva primo file estratto
-  if files:
-    outfile = files[0]
-    with open(save_path,"wb") as fw:
-      fw.write(open(outfile,"rb").read())
-  
-  else:
-    messagebox.showerror("Error", "No files extracted from PUP")
-
-  # Aggiorna percorso GUI
-  self.file_label.configure(text=self.file_path)
-
-  # Abilita pulsante estrazione
-  self.extract_button.configure(state=NORMAL)
-
-  def extract_pup(self):
+    def extract_pup(self):
         # Ottiene il percorso del file selezionato
         file_path = self.file_label.cget('text')
 
@@ -131,23 +108,58 @@ def extract_file(self):
             messagebox.showerror("Errore", f"Il file {file_path} non esiste.")
             return
 
+        # Converti il file .PUP in .PUP.dec
+        try:
+            dec_file_path = convert_pup_to_dec(file_path)
+        except RuntimeError as e:
+            messagebox.showerror("Errore", str(e))
+            return
+
         # Crea una directory temporanea per l'estrazione dei file
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Estrae i file dal file .pup nella directory temporanea
+            # Estrae i file dal file .PUP.dec nella directory temporanea
             try:
-                if PS4_DEC_PUP_INFO_INSTALLED:
-                    ps4_dec_pup_info.extract_pup(file_path, temp_dir)
-                else:
-                    from pup_unpacker import extract_pup
-                    extract_pup(file_path, temp_dir)
+                ps4_dec_pup_info.extract_pup(dec_file_path, temp_dir)
             except Exception as e:
-                messagebox.showerror("Errore", f"Errore durante l'estrazione del file {file_path}: {str(e)}")
+                messagebox.showerror("Errore", f"Errore durante l'estrazione del file {dec_file_path}: {str(e)}")
                 return
 
             # Crea una directory con lo stesso nome del file .pup nella stessa cartella
             # e salva i file estratti al suo interno
             dir_path = os.path.dirname(file_path)
             pup_name = os.path.splitext(os.path.basename(file_path))[0]
+            pup_dir_path = os.path.join(dir_path, pup_name)
+            if not os.path.exists(pup_dir_path):
+                os.makedirs(pup_dir_path)
+
+            # Continua con l'estrazione dei file
+            for i, entry in enumerate(pup.entry_table):
+                entry_type = entry[0]
+                entry_flags = entry[1]
+                entry_compression = entry[2]
+                entry_uncompressed_size = entry[3]
+                entry_compressed_size = entry[4]
+                entry_hash = entry[5]
+                entry_data_offset = entry[6]
+                entry_data_size = entry_compressed_size if entry_compression else entry_uncompressed_size
+                entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])
+                
+                # Calcola il nome del file e crea il percorso completo
+                file_name = f"{i:06d}.bin"
+                file_path = os.path.join(pup_dir_path, file_name)
+                
+                # Salva il file nella directory
+                with open(file_path, 'wb') as f:
+                    f.write(entry_data)
+
+            # Mostra un messaggio di conferma all'utente
+            messagebox.showinfo("Informazione", "L'estrazione è stata completata con successo.")
+
+# Esegue l'applicazione
+if __name__ == '__main__':
+    root = Tk()
+    pup_unpacker = PupUnpacker(root)
+    root.mainloop()
 
 # Costanti definite altrove
 HEADER_SIZE = 192
@@ -192,7 +204,7 @@ class Pup:
 def select_file():
     root = tk.Tk()
     root.withdraw()
-    return filedialog.askopenfilename(filetypes=[('PUP files', '*.PUP.dec')])
+    return filedialog.askopenfilename(filetypes=[('PUP files', '*.PUP')])
 
 if __name__ == '__main__':
     file_path = select_file()
@@ -290,10 +302,10 @@ class PupUnpacker:
     def __init__(self, master):
         self.master = master
         master.title("Seregon PUP Unpacker")
-
         # Etichetta del titolo
         self.title_label = Label(master, text="Seregon PUP Unpacker")
         self.title_label.pack()
+
 
         # Etichetta per mostrare il percorso del file selezionato
         self.file_label = Label(master, text="")
@@ -309,7 +321,7 @@ class PupUnpacker:
 
     def select_file(self):
         # Apre la finestra di dialogo per selezionare il file
-        file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.PUP.dec")])
+        file_path = filedialog.askopenfilename(filetypes=[("PUP files", ".PUP")])
 
         # Aggiorna l'etichetta con il percorso del file selezionato
         self.file_label.configure(text=file_path)
@@ -319,98 +331,6 @@ class PupUnpacker:
             self.extract_button.configure(state=NORMAL)
         else:
             self.extract_button.configure(state=DISABLED)
-
-   # Import ed eventuali definizioni
-
-# Classe PupUnpacker
-class PupUnpacker:
-
-  def __init__(self):
-    # codice per inizializzare oggetto e GUI
-
-   def extract_pup(self):
-    
-    file_path = ... 
-    # codice esistente fino ad apertura file
-
-    with open(file_path, 'rb') as f:
-      buffer = f.read()
-
-    # Spostare questo codice in metodi di classe
-    self.validate_header(buffer)  
-    self.extract_entries(buffer)
-
-  def validate_header(self, buffer):
-    # codice di validazione
-
-   def extract_entries(self, buffer):
-    # codice per estrarre le entry
-
-# Creazione istanza PRIMA dell'uso  
-    unpacker = PupUnpacker()  
-
-# Chiamata metodo
-    unpacker.extract_pup()
-
-def extract_all(self, output_dir):
-
-    """Estrae tutti i file nel PUP nella directory di output specificata"""
-    # Controlla se la directory di output esiste, altrimenti la crea
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    # Estrae tutti i file nella directory di output
-    for entry in self.entry_table:
-        entry_name, entry_offset, entry_size = entry
-        with open(os.path.join(output_dir, entry_name), 'wb') as f:
-            f.write(self.buffer[entry_offset:entry_offset+entry_size])
-
-def extract_file(self, output_dir, file_name):
-    
-    """Estrae un singolo file dal PUP nella directory di output specificata"""
-    # Cerca il file nella lista dei file del PUP
-entry = next((e for e in self.entry_table if e[0] == file_name), None)
-if not entry:
-    raise ValueError(f"Il file {file_name} non e presente nel PUP.")
-
-    # Estrae il file nella directory di output
-entry_name, entry_offset, entry_size = entry
-with open(os.path.join(output_dir, entry_name), 'wb') as f:
-    f.write(self.buffer[entry_offset:entry_offset+entry_size])
-    
-   
-class PupUnpacker:
-    def __init__(self, master):
-        self.master = master
-        master.title("Seregon PUP Unpacker")
-        # Etichetta del titolo
-        self.title_label = Label(master, text="Seregon PUP Unpacker")
-        self.title_label.pack()
-
-
-    # Etichetta per mostrare il percorso del file selezionato
-    self.file_label = Label(master, text="")
-    self.file_label.pack()
-
-    # Pulsante per selezionare il file
-    self.select_file_button = Button(master, text="Seleziona file", command=self.select_file)
-    self.select_file_button.pack()
-
-    # Pulsante per estrarre i file
-    self.extract_button = Button(master, text="Estrai file", state=DISABLED, command=self.extract_pup)
-    self.extract_button.pack()
-
-def select_file(self):
-    # Apre la finestra di dialogo per selezionare il file
-    file_path = filedialog.askopenfilename(filetypes=[("PUP files", ".PUP.dec")])
-
-    # Aggiorna l'etichetta con il percorso del file selezionato
-    self.file_label.configure(text=file_path)
-
-    # Abilita il pulsante per l'estrazione solo se il file selezionato ha estensione .pup
-    if file_path.lower().endswith('*.PUP.dec'):
-        self.extract_button.configure(state=NORMAL)
-    else:
-        self.extract_button.configure(state=DISABLED)
 # Continuazione del codice precedente
 
         # Verifica che il file sia un PUP valido

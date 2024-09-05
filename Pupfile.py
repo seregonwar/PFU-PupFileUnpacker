@@ -26,7 +26,7 @@ HEADER_SIZE = 192
 BLOCK_SIZE = 512
 
 def read_pup_file(filepath):
-    # Apriamo il file in modalit‡ binaria e leggiamo l'intero contenuto
+    # Apriamo il file in modalit√† binaria e leggiamo l'intero contenuto
     with open(filepath, 'rb') as file:
         content = file.read()
 
