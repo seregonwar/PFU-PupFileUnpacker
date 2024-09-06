@@ -5,7 +5,7 @@
 ![GitHub stars](https://img.shields.io/github/stars/seregonwar/Pup-file-extractor?style=social)
 ![License](https://img.shields.io/badge/license-MIT-red)
 
-APFU is a Python tool for extracting and analyzing PS4 firmware update files (PUPs). It provides an easy way to unpack and inspect the contents of PUP packages.
+PFU is a Python tool for extracting and analyzing PS4 firmware update files (PUPs). It provides an easy way to unpack and inspect the contents of PUP packages.
 
 ## Features
 
