@@ -8,10 +8,11 @@ import Pupfile
 import ps4_dec_pup_info
 import webbrowser
 from pup_decrypt_tool import decrypt_pup
-from ps4_dec_pup_info import extract_pup
+from ps4_dec_pup_info import extract_pup as pup_extractor
 from PIL import Image, ImageTk
 import customtkinter as ctk
 import json
+import warnings
 
 # GUI Definition
 gui = """
@@ -40,7 +41,7 @@ def extract_magic_number(file_path):
 class PupUnpacker:
     def __init__(self, master):
         self.master = master
-        master.title("PFU-PupFileUnziper")
+        master.title("PFU-PupFileUnpacker")
         master.geometry("1200x900")
         
         # Load saved settings
@@ -102,8 +103,10 @@ class PupUnpacker:
         logo_label.image = logo_photo
         logo_label.pack(pady=(0, 20))
 
+        warnings.warn(f"{type(self).__name__} Warning: Given image is not CTkImage but {type(logo_photo)}. Image can not be scaled on HighDPI displays, use CTkImage instead.\n")
+
         # Title
-        self.title_label = ctk.CTkLabel(self.main_frame, text="PFU-PupFileUnziper", font=("SF Pro", 36, "bold"))
+        self.title_label = ctk.CTkLabel(self.main_frame, text="PFU-PupFileUnpacker", font=("SF Pro", 36, "bold"))
         self.title_label.pack(pady=(0, 30))
 
         self.file_path = StringVar()
@@ -209,25 +212,25 @@ class PupUnpacker:
             self.credits_label.configure(text="Created by: SEREGON")
             self.github_link.configure(text="Visit my GitHub")
         elif language == "Italian":
-            self.select_file_button.configure(text="Select File")
-            self.extract_button.configure(text="Extract File")
-            self.credits_label.configure(text="Created by: SEREGON")
-            self.github_link.configure(text="Visit my GitHub")
+            self.select_file_button.configure(text="Seleziona il file")
+            self.extract_button.configure(text="Estrai File")
+            self.credits_label.configure(text="Creato da: SEREGON")
+            self.github_link.configure(text="Visita il mio GitHub")
         elif language == "French":
-            self.select_file_button.configure(text="Select File")
-            self.extract_button.configure(text="Extract File")
-            self.credits_label.configure(text="Created by: SEREGON")
-            self.github_link.configure(text="Visit my GitHub")
+            self.select_file_button.configure(text="Sélectionner le fichier")
+            self.extract_button.configure(text="Extraire le fichier")
+            self.credits_label.configure(text="Créé par: SEREGON")
+            self.github_link.configure(text="Visiter mon GitHub")
         elif language == "German":
-            self.select_file_button.configure(text="Select File")
-            self.extract_button.configure(text="Extract File")
-            self.credits_label.configure(text="Created by: SEREGON")
-            self.github_link.configure(text="Visit my GitHub")
+            self.select_file_button.configure(text="Datei auswählen")
+            self.extract_button.configure(text="Datei extrahieren")
+            self.credits_label.configure(text="Erstellt von: SEREGON")
+            self.github_link.configure(text="Besuche mein GitHub")
         elif language == "Spanish":
-            self.select_file_button.configure(text="Select File")
-            self.extract_button.configure(text="Extract File")
-            self.credits_label.configure(text="Created by: SEREGON")
-            self.github_link.configure(text="Visit my GitHub")
+            self.select_file_button.configure(text="Seleccionar archivo")
+            self.extract_button.configure(text="Extraer archivo")
+            self.credits_label.configure(text="Creado por: SEREGON")
+            self.github_link.configure(text="Visita mi GitHub")
 
         # Update color scheme
         ctk.set_default_color_theme(color_scheme.lower())
@@ -264,76 +267,90 @@ class PupUnpacker:
         file_path = self.file_path.get()
 
         if not os.path.exists(file_path):
-            self.log_to_console(f"Error: The file {file_path} does not exist.")
-            messagebox.showerror("Error", f"The file {file_path} does not exist.")
+            self.log_to_console(f"Errore: Il file {file_path} non esiste.")
+            messagebox.showerror("Errore", f"Il file {file_path} non esiste.")
             return
 
         try:
             magic = extract_magic_number(file_path)
-            self.log_to_console(f"Extracted magic number: {magic.hex()}")
+            self.log_to_console(f"Numero magico estratto: {magic.hex()}")
         except Exception as e:
-            error_message = f"Error extracting magic number: {str(e)}"
+            error_message = f"Errore nell'estrazione del numero magico: {str(e)}"
             self.log_to_console(error_message)
-            messagebox.showerror("Error", error_message)
+            messagebox.showerror("Errore", error_message)
             return
 
         try:
             dec_file_path = file_path + ".dec"
-            self.log_to_console("Decrypting PUP file...")
+            self.log_to_console("Decrittazione del file PUP...")
             decrypt_pup(file_path, dec_file_path)
-            self.log_to_console("File PUP decrypted successfully.")
+            self.log_to_console("File PUP decrittato con successo.")
         except RuntimeError as e:
-            error_message = f"Error decrypting PUP file: {str(e)}"
+            error_message = f"Errore nella decrittazione del file PUP: {str(e)}"
             self.log_to_console(error_message)
-            messagebox.showerror("Error", error_message)
+            messagebox.showerror("Errore", error_message)
             return
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            try:
-                self.log_to_console("Estrazione dei file dal PUP decrittato...")
-                extract_pup(dec_file_path, temp_dir)
-                self.log_to_console("File estratti con successo.")
-            except Exception as e:
-                error_message = f"Errore nell'estrazione del file {dec_file_path}: {str(e)}"
-                self.log_to_console(error_message)
-                messagebox.showerror("Errore", error_message)
-                return
+        output_dir = os.path.join(os.path.dirname(file_path), "extracted_pup")
+        os.makedirs(output_dir, exist_ok=True)
 
-            dir_path = os.path.dirname(file_path)
-            pup_name = os.path.splitext(os.path.basename(file_path))[0]
-            pup_dir_path = os.path.join(dir_path, pup_name)
-            if not os.path.exists(pup_dir_path):
-                os.makedirs(pup_dir_path)
-                self.log_to_console(f"Creata directory: {pup_dir_path}")
-
-            self.log_to_console("Elaborazione dei file estratti...")
-            pup = Pupfile.Pupfile(dec_file_path)
-            buffer = pup.get_buffer()
-            total_entries = len(pup.entry_table)
-            self.progress.configure(maximum=total_entries)
-
-            for i, entry in enumerate(pup.entry_table):
-                entry_type, entry_flags, entry_compression, entry_uncompressed_size, entry_compressed_size, entry_hash, entry_data_offset = entry
-                entry_data_size = entry_compressed_size if entry_compression else entry_uncompressed_size
-
-                if entry_compression:
-                    entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])
-                else:
-                    entry_data = buffer[entry_data_offset:entry_data_offset+entry_data_size]
+        try:
+            self.log_to_console("Estrazione dei file dal PUP decrittato...")
+            with open(dec_file_path, 'rb') as f:
+                pup = ps4_dec_pup_info.Pup(f)
+                file_size = os.path.getsize(dec_file_path)
+                self.log_to_console(f"Dimensione del file: {file_size} bytes")
+                self.log_to_console(f"Numero di blob: {pup.BLOB_COUNT}")
                 
-                file_name = f"{i:06d}.bin"
-                file_path = os.path.join(pup_dir_path, file_name)
+                valid_blobs = 0
+                invalid_blobs = 0
+                for count, blob_instance in enumerate(pup.BLOBS):
+                    try:
+                        if count % 100 == 0:
+                            self.log_to_console(f"Elaborazione del blob {count}...")
+                            self.master.update_idletasks()  # Aggiorna l'interfaccia utente
+                        
+                        if not hasattr(blob_instance, 'OFFSET') or not hasattr(blob_instance, 'FILE_SIZE'):
+                            invalid_blobs += 1
+                            continue
+                        
+                        if blob_instance.OFFSET < 0 or blob_instance.OFFSET >= file_size:
+                            invalid_blobs += 1
+                            continue
+                        if blob_instance.FILE_SIZE < 0 or blob_instance.FILE_SIZE > file_size:
+                            invalid_blobs += 1
+                            continue
+                        if blob_instance.OFFSET + blob_instance.FILE_SIZE > file_size:
+                            invalid_blobs += 1
+                            continue
+                        
+                        f.seek(blob_instance.OFFSET)
+                        data = f.read(blob_instance.FILE_SIZE)
+                        
+                        output_file = os.path.join(output_dir, f"blob_{count:03d}.bin")
+                        with open(output_file, 'wb') as out_f:
+                            out_f.write(data)
+                        
+                        valid_blobs += 1
+                        if valid_blobs % 100 == 0:
+                            self.log_to_console(f"{valid_blobs} blob validi estratti")
+                            self.master.update_idletasks()  # Aggiorna l'interfaccia utente
+                    except Exception as e:
+                        invalid_blobs += 1
+                        if invalid_blobs % 100 == 0:
+                            self.log_to_console(f"{invalid_blobs} blob non validi trovati")
+                            self.master.update_idletasks()  # Aggiorna l'interfaccia utente
                 
-                with open(file_path, 'wb') as f:
-                    f.write(entry_data)
-                self.log_to_console(f"File salvato: {file_name} (Dimensione: {len(entry_data)} bytes)")
+                self.log_to_console(f"Estrazione completata. {valid_blobs} blob validi estratti, {invalid_blobs} blob non validi su {pup.BLOB_COUNT} totali.")
+        except Exception as e:
+            error_message = f"Errore nell'estrazione del file {dec_file_path}: {str(e)}"
+            self.log_to_console(error_message)
+            messagebox.showerror("Errore", error_message)
+            return
 
-                self.progress.set((i + 1) / total_entries)
-                self.master.update_idletasks()
-
-            success_message = f"Estrazione completata con successo. File salvati in {pup_dir_path}"
-            self.log_to_console(success_message)
-            messagebox.showinfo("Informazione", success_message)
+        success_message = f"Estrazione completata con successo. File salvati in {output_dir}"
+        self.log_to_console(success_message)
+        messagebox.showinfo("Informazione", success_message)
 
 if __name__ == '__main__':
     root = ctk.CTk()

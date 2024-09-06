@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+1#!/usr/bin/env python
 import struct
 import sys
 import os
@@ -73,10 +73,17 @@ class Blob:
                  'ID', 'TYPE', 'COMPRESSED', 'BLOCKED')
     
     def __init__(self, f):
-        self.FLAGS = struct.unpack('<Q', f.read(8))[0]
-        self.OFFSET = struct.unpack('<Q', f.read(8))[0]
-        self.FILE_SIZE = struct.unpack('<Q', f.read(8))[0]
-        self.MEMORY_SIZE = struct.unpack('<Q', f.read(8))[0]
+        try:
+            self.FLAGS = struct.unpack('<Q', f.read(8))[0]
+            self.OFFSET = struct.unpack('<Q', f.read(8))[0]
+            self.FILE_SIZE = struct.unpack('<Q', f.read(8))[0]
+            self.MEMORY_SIZE = struct.unpack('<Q', f.read(8))[0]
+        except struct.error:
+            # Se non riusciamo a leggere tutti i dati, impostiamo valori non validi
+            self.FLAGS = 0
+            self.OFFSET = -1
+            self.FILE_SIZE = 0
+            self.MEMORY_SIZE = 0
     
     def __str__(self, entry):
         self.ID = self.FLAGS >> 20
@@ -165,34 +172,38 @@ def extract_pup(dec_file_path, output_dir):
     try:
         with open(dec_file_path, 'rb') as f:
             pup = Pup(f)
+            file_size = os.path.getsize(dec_file_path)
+            print(f"File size: {file_size}")
             for count, blob_instance in enumerate(pup.BLOBS):
                 try:
                     blob_instance.__str__(count)
-                    # Extract blob data
-                    if blob_instance.OFFSET < 0 or blob_instance.FILE_SIZE < 0:
-                        raise ValueError(f"Invalid values for OFFSET or FILE_SIZE in blob {count}")
+                    print(f"Blob {count}:")
+                    print(f"  OFFSET: {blob_instance.OFFSET}")
+                    print(f"  FILE_SIZE: {blob_instance.FILE_SIZE}")
+                    print(f"  MEMORY_SIZE: {blob_instance.MEMORY_SIZE}")
                     
-                    # Add debug messages for OFFSET and FILE_SIZE values
-                    print(f"Blob {count}: OFFSET = {blob_instance.OFFSET}, FILE_SIZE = {blob_instance.FILE_SIZE}")
-
-                    # Limitation of the OFFSET and FILE_SIZE values
-                    max_offset = 2**63 - 1
-                    max_file_size = 2**63 - 1
-                    if blob_instance.OFFSET > max_offset or blob_instance.FILE_SIZE > max_file_size:
-                        raise ValueError(f"Values too large for OFFSET or FILE_SIZE in blob {count}")
-
+                    # Controlli di validità
+                    if blob_instance.OFFSET < 0 or blob_instance.OFFSET >= file_size:
+                        raise ValueError(f"Invalid OFFSET value for blob {count}")
+                    if blob_instance.FILE_SIZE < 0 or blob_instance.FILE_SIZE > file_size:
+                        raise ValueError(f"Invalid FILE_SIZE value for blob {count}")
+                    if blob_instance.OFFSET + blob_instance.FILE_SIZE > file_size:
+                        raise ValueError(f"OFFSET + FILE_SIZE exceeds file size for blob {count}")
+                    
+                    # Estrazione del blob
                     f.seek(blob_instance.OFFSET)
-                    data = f.read(min(blob_instance.FILE_SIZE, max_file_size))
-                    # Save extracted data
+                    data = f.read(blob_instance.FILE_SIZE)
+                    
+                    # Salvataggio del file estratto
                     output_file = os.path.join(output_dir, f"blob_{count:03d}.bin")
                     with open(output_file, 'wb') as out_f:
                         out_f.write(data)
+                    print(f"Blob {count} estratto con successo")
                 except Exception as e:
-                    print(f"Error extracting blob {count}: {str(e)}")
-                    raise
-        print(f"Extraction completed. Files saved in {output_dir}")
+                    print(f"Errore nell'estrazione del blob {count}: {str(e)}")
+        print(f"Estrazione completata. File salvati in {output_dir}")
     except Exception as e:
-        print(f"Error extracting file {dec_file_path}: {str(e)}")
+        print(f"Errore nell'estrazione del file {dec_file_path}: {str(e)}")
         raise
 
 # PROGRAM START
@@ -205,7 +216,7 @@ def main(argc, argv):
     except IOError:
         raise SystemExit('\n  ERROR: Invalid Input File!!!')
     except IndexError:
-        raise SystemExit('\n  Usage: python %s [PUPUPDATE#.PUP.dec]' % argv[0])
+        raise SystemExit('\n  Utilizzo: python %s [PUPUPDATE#.PUP.dec]' % argv[0])
     
     for count, blob_instance in enumerate(PUP.BLOBS):
         blob_instance.__str__(count)
