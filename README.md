@@ -25,7 +25,7 @@ APFU is a Python tool for extracting and analyzing PS4 firmware update files (PU
 
 ### Dependencies
 
-APFU requires Python 3 and the following modules:
+PFU requires Python 3 and the following modules:
 
 - tkinter
 - struct
