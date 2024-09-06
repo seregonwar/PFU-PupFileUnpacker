@@ -1,37 +1,34 @@
 import os
 import struct
 import tempfile
-from tkinter import Tk, Label, Button, DISABLED, NORMAL, messagebox, filedialog
+from tkinter import DISABLED, NORMAL, messagebox, filedialog, StringVar
 import subprocess
 import lzma
 import Pupfile
 import ps4_dec_pup_info
-from pup_decrypt_tool import decrypt_pup  # Import the decryption function
-from ps4_dec_pup_info import extract_pup  # Import the extraction function
+import webbrowser
+from pup_decrypt_tool import decrypt_pup
+from ps4_dec_pup_info import extract_pup
+from PIL import Image, ImageTk
+import customtkinter as ctk
 
-# Define GUI
+# GUI Definition
 gui = """
-  
- ________  _______   ________  _______   ________  ________  ________          
-|\   ____\|\  ___ \ |\   __  \|\  ___ \ |\   ____\|\   __  \|\   ___  \        
-\ \  \___|\ \   __/|\ \  \|\  \ \   __/|\ \  \___|\ \  \|\  \ \  \\ \  \       
- \ \_____  \ \  \_|/_\ \   _  _\ \  \_|/_\ \  \  __\ \  \\\  \ \  \\ \  \      
-  \|____|\  \ \_______\ \__\\  \\ \_______\ \_______\ \_______\ \__\\ \__\     
-    ____\_\  \ \_______|\|__|\|__|\|_______|\|_______|\|_______|\|__| \|__|    
-   |\_________\|_______|\|__|\|__|\|_______|\|_______|\|_______|\|__| \|__|    
-   \|_________|                                                                
-                                                                               
-                                                                               
+  _____  ______ _    _       _____            ______ _ _     _    _            _                 
+ |  __ \|  ____| |  | |     |  __ \          |  ____(_) |   | |  | |          (_)                
+ | |__) | |__  | |  | |     | |__) |   _ _ __| |__   _| | ___| |  | |_ __  _____ _ __   ___ _ __ 
+ |  ___/|  __| | |  | |     |  ___/ | | | '_ \  __| | | |/ _ \ |  | | '_ \|_  / | '_ \ / _ \ '__|
+ | |    | |    | |__| |     | |   | |_| | |_) | |    | | |  __/ |__| | | | |/ /| | |_) |  __/ |   
+ |_|    |_|     \____/      |_|    \__,_| .__/|_|    |_|_|\___|\____/|_| |_/___|_| .__/ \___|_|   
+                                        | |                                      | |              
+                                        |_|                                      |_|              
 
                     ~Created by: SEREGON~
-             REMINDER THIS WAS BUILT FOR EDUCATIONAL PURPOSES
-               SO DON'T USE THIS FOR EVIL ACTIVITIES.
+             REMINDER: THIS WAS CREATED FOR EDUCATIONAL PURPOSES
+               DO NOT USE IT FOR MALICIOUS ACTIVITIES.
 """
 
-# Define the function to open the dialog and select the .pup file
 def select_file():
-    root = Tk()
-    root.withdraw()
     return filedialog.askopenfilename(filetypes=[('PUP files', '*.PUP')])
 
 def extract_magic_number(file_path):
@@ -42,103 +39,165 @@ def extract_magic_number(file_path):
 class PupUnpacker:
     def __init__(self, master):
         self.master = master
-        master.title("Seregon PUP Unpacker")
+        master.title("PFU-PupFileUnziper")
+        master.geometry("1200x900")
+        
+        # Set dark theme
+        ctk.set_appearance_mode("dark")
+        ctk.set_default_color_theme("blue")
+        
+        # Main frame
+        main_frame = ctk.CTkFrame(master)
+        main_frame.pack(expand=True, fill='both', padx=30, pady=30)
 
-        # Title label
-        self.title_label = Label(master, text="Seregon PUP Unpacker")
-        self.title_label.pack()
+        # Logo
+        logo_image = Image.open("logo.png")
+        logo_image = logo_image.resize((200, 200), Image.Resampling.LANCZOS)  # Resize logo
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = ctk.CTkLabel(main_frame, image=logo_photo, text="")
+        logo_label.image = logo_photo
+        logo_label.pack(pady=(0, 20))
 
-        # Label to show the selected file path
-        self.file_label = Label(master, text="")
-        self.file_label.pack()
+        # Title
+        self.title_label = ctk.CTkLabel(main_frame, text="PFU-PupFileUnziper", font=("Roboto", 36, "bold"))
+        self.title_label.pack(pady=(0, 30))
 
-        # Button to select the file
-        self.select_file_button = Button(master, text="Select File", command=self.select_file)
-        self.select_file_button.pack()
+        self.file_path = StringVar()
 
-        # Button to extract the files
-        self.extract_button = Button(master, text="Extract Files", state=DISABLED, command=self.extract_pup)
-        self.extract_button.pack()
+        # File label
+        self.file_label = ctk.CTkLabel(main_frame, textvariable=self.file_path, wraplength=800, font=("Roboto", 14))
+        self.file_label.pack(pady=(0, 20))
+
+        # Buttons
+        button_frame = ctk.CTkFrame(main_frame)
+        button_frame.pack(pady=(0, 30))
+
+        self.select_file_button = ctk.CTkButton(button_frame, text="Select File", command=self.select_file, font=("Roboto", 16), width=180, height=50)
+        self.select_file_button.pack(side="left", padx=(0, 30))
+
+        self.extract_button = ctk.CTkButton(button_frame, text="Extract File", state=DISABLED, command=self.extract_pup, font=("Roboto", 16), width=180, height=50)
+        self.extract_button.pack(side="left")
+
+        # Progress bar
+        self.progress = ctk.CTkProgressBar(main_frame, orientation="horizontal", mode="determinate", height=20)
+        self.progress.pack(fill='x', pady=(0, 30))
+        self.progress.set(0)
+
+        # Console
+        console_frame = ctk.CTkFrame(main_frame)
+        console_frame.pack(expand=True, fill='both', pady=(10, 0))
+
+        self.console = ctk.CTkTextbox(console_frame, wrap='word', state='disabled', font=("Roboto", 14))
+        self.console.pack(side='left', expand=True, fill='both')
+
+        self.scrollbar = ctk.CTkScrollbar(console_frame, command=self.console.yview)
+        self.scrollbar.pack(side='right', fill='y')
+
+        self.console.configure(yscrollcommand=self.scrollbar.set)
+
+        # Credits and link
+        credits_frame = ctk.CTkFrame(main_frame)
+        credits_frame.pack(pady=(30, 0))
+
+        self.credits_label = ctk.CTkLabel(credits_frame, text="Created by: SEREGON", font=("Roboto", 14))
+        self.credits_label.pack(side="left", padx=(0, 20))
+
+        self.github_link = ctk.CTkLabel(credits_frame, text="Visit my GitHub", cursor="hand2", text_color="#4B8BBE", font=("Roboto", 14))
+        self.github_link.pack(side="left")
+        self.github_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/seregonwar"))
+
+    def log_to_console(self, message):
+        self.console.configure(state='normal')
+        self.console.insert('end', message + '\n')
+        self.console.see('end')
+        self.console.configure(state='disabled')
 
     def select_file(self):
-        # Open the dialog to select the file
-        self.file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.PUP")])
-        # Update the label with the selected file path
-        self.file_label.configure(text=self.file_path)
-        # Enable the extract button only if the selected file has a .pup extension
-        if self.file_path.lower().endswith('.pup'):
+        file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.PUP")])
+        self.file_path.set(file_path)
+        if file_path.lower().endswith('.pup'):
             self.extract_button.configure(state=NORMAL)
+            self.log_to_console(f"File selected: {file_path}")
         else:
             self.extract_button.configure(state=DISABLED)
+            self.log_to_console("Invalid file selected. Please choose a .PUP file.")
 
     def extract_pup(self):
-        # Get the selected file path
-        file_path = self.file_label.cget('text')
+        file_path = self.file_path.get()
 
         if not os.path.exists(file_path):
+            self.log_to_console(f"Error: The file {file_path} does not exist.")
             messagebox.showerror("Error", f"The file {file_path} does not exist.")
             return
 
-        # Extract the magic number
         try:
             magic = extract_magic_number(file_path)
-            print(f"Extracted magic number: {magic}")
+            self.log_to_console(f"Magic number extracted: {magic}")
         except Exception as e:
-            messagebox.showerror("Error", f"Error extracting the magic number: {str(e)}")
+            error_message = f"Error extracting magic number: {str(e)}"
+            self.log_to_console(error_message)
+            messagebox.showerror("Error", error_message)
             return
 
-        # Convert the .PUP file to .PUP.dec
         try:
             dec_file_path = file_path + ".dec"
+            self.log_to_console("Decrypting PUP file...")
             decrypt_pup(file_path, dec_file_path)
+            self.log_to_console("PUP file decrypted successfully.")
         except RuntimeError as e:
-            messagebox.showerror("Error", str(e))
+            error_message = f"Error decrypting PUP file: {str(e)}"
+            self.log_to_console(error_message)
+            messagebox.showerror("Error", error_message)
             return
 
-        # Create a temporary directory for extracting the files
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Extract the files from the .PUP.dec file into the temporary directory
             try:
+                self.log_to_console("Extracting files from decrypted PUP...")
                 extract_pup(dec_file_path, temp_dir)
+                self.log_to_console("Files extracted successfully.")
             except Exception as e:
-                messagebox.showerror("Error", f"Error extracting the file {dec_file_path}: {str(e)}")
+                error_message = f"Error extracting file {dec_file_path}: {str(e)}"
+                self.log_to_console(error_message)
+                messagebox.showerror("Error", error_message)
                 return
 
-            # Create a directory with the same name as the .pup file in the same folder
-            # and save the extracted files inside it
             dir_path = os.path.dirname(file_path)
             pup_name = os.path.splitext(os.path.basename(file_path))[0]
             pup_dir_path = os.path.join(dir_path, pup_name)
             if not os.path.exists(pup_dir_path):
                 os.makedirs(pup_dir_path)
+                self.log_to_console(f"Created directory: {pup_dir_path}")
 
-            # Continue with extracting the files
+            self.log_to_console("Processing extracted files...")
             pup = Pupfile.Pupfile(dec_file_path)
             buffer = pup.get_buffer()
+            total_entries = len(pup.entry_table)
+            self.progress.configure(maximum=total_entries)
+
             for i, entry in enumerate(pup.entry_table):
-                entry_type = entry[0]
-                entry_flags = entry[1]
-                entry_compression = entry[2]
-                entry_uncompressed_size = entry[3]
-                entry_compressed_size = entry[4]
-                entry_hash = entry[5]
-                entry_data_offset = entry[6]
+                entry_type, entry_flags, entry_compression, entry_uncompressed_size, entry_compressed_size, entry_hash, entry_data_offset = entry
                 entry_data_size = entry_compressed_size if entry_compression else entry_uncompressed_size
-                entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])
+
+                if entry_compression:
+                    entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])
+                else:
+                    entry_data = buffer[entry_data_offset:entry_data_offset+entry_data_size]
                 
-                # Calculate the file name and create the full path
                 file_name = f"{i:06d}.bin"
                 file_path = os.path.join(pup_dir_path, file_name)
                 
-                # Save the file in the directory
                 with open(file_path, 'wb') as f:
                     f.write(entry_data)
+                self.log_to_console(f"File saved: {file_name}")
 
-            # Show a confirmation message to the user
-            messagebox.showinfo("Information", "Extraction completed successfully.")
+                self.progress.set((i + 1) / total_entries)
+                self.master.update_idletasks()
 
-# Run the application
+            success_message = f"Extraction completed successfully. Files saved in {pup_dir_path}"
+            self.log_to_console(success_message)
+            messagebox.showinfo("Information", success_message)
+
 if __name__ == '__main__':
-    root = Tk()
+    root = ctk.CTk()
     pup_unpacker = PupUnpacker(root)
     root.mainloop()

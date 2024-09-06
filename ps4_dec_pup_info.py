@@ -175,7 +175,7 @@ def extract_pup(dec_file_path, output_dir):
                     # Add debug messages for OFFSET and FILE_SIZE values
                     print(f"Blob {count}: OFFSET = {blob_instance.OFFSET}, FILE_SIZE = {blob_instance.FILE_SIZE}")
 
-                    # Limit OFFSET and FILE_SIZE values to avoid error
+                    # Limitation of the OFFSET and FILE_SIZE values
                     max_offset = 2**63 - 1
                     max_file_size = 2**63 - 1
                     if blob_instance.OFFSET > max_offset or blob_instance.FILE_SIZE > max_file_size:

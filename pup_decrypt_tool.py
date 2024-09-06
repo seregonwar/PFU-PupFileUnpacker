@@ -34,7 +34,8 @@ def decrypt_pup(input_file, output_file):
         padding_length = decrypted_data[-1]
         print(f"Padding length: {padding_length}")
 
-        if padding_length > 0 and padding_length <= AES.block_size:
+        # Robust padding check
+        if 0 < padding_length <= 16:  # AES uses 16-byte blocks
             padding_bytes = decrypted_data[-padding_length:]
             print(f"Padding bytes: {padding_bytes}")
 
