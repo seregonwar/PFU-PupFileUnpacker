@@ -5,9 +5,9 @@ import zlib
 import logging
 from contextlib import contextmanager
 
-# Costanti
+# Constants
 MAGIC = b'\x01\x4F\xC1\x0A'
-VER1, VER2 = 1, 2 # Versioni supportate
+VER1, VER2 = 1, 2 # Supported versions
 HEADER_SIZE = 192
 ENTRY_SIZE = 32
 
@@ -17,46 +17,46 @@ def nullcontext():
 
 def dec_pup(data, output_dir='.', version=2, loglevel=logging.INFO):
   """
-  Estrae e decodifica i file contenuti in un file PUP PS4.
+  Extracts and decodes files contained in a PS4 PUP file.
 
   Parameters:
-  data (bytes): Dati binari del file PUP
-  output_dir (str): Cartella dove salvare i file estratti
-  version (int): Versione del formato PUP
-  loglevel (int): Livello di logging 
+  data (bytes): Binary data of the PUP file
+  output_dir (str): Directory where to save the extracted files
+  version (int): PUP file format version
+  loglevel (int): Logging level
 
   Returns:
-  files (list): Elenco dei file estratti
+  files (list): List of extracted files
   """
 
-  # Configura il logging
+  # Set up logging
   logging.basicConfig(level=loglevel)
 
-  # Verifica header
+  # Check header
   if data[:4] != MAGIC:
-    raise ValueError("Magic number non valido")
+    raise ValueError("Invalid magic number")
 
-  logging.info("File PUP valido, inizio decodifica...")
+  logging.info("Valid PUP file, starting decoding...")
 
-  # Leggi header 
+  # Read header
   header = data[:HEADER_SIZE]
   ver, num_files = struct.unpack_from('<2I', header, 4)
 
   if ver not in [VER1, VER2]:
-    raise ValueError(f"Versione PUP {ver} non supportata") 
+    raise ValueError(f"Unsupported PUP version {ver}") 
 
-  # Ciclo di decodifica file
+  # Decoding loop
   offset, files = HEADER_SIZE, []
   for i in range(num_files):
 
-    # Leggi entry ed estrai metadata
+    # Read entry and extract metadata
     entry = data[offset:offset+ENTRY_SIZE]
     file_offset, file_size = struct.unpack_from('<2Q', entry, 8)
     compression_type = entry[:4]
 
-    logging.debug(f"Decodifico file {i+1}/{num_files}")
+    logging.debug(f"Decoding file {i+1}/{num_files}")
 
-    # Leggi ed estrai contenuto file  
+    # Read and extract file content  
     with nullcontext() as stream:
       if file_size > 0:
         stream = io.BytesIO(data[file_offset:file_offset+file_size])
@@ -65,17 +65,17 @@ def dec_pup(data, output_dir='.', version=2, loglevel=logging.INFO):
     if compression_type == b'zlib':
       file_data = zlib.decompress(file_data)
 
-    # Salva su file system
+    # Save to file system
     outfile = os.path.join(output_dir, f"file{i+1}.bin")
     try:
       with open(outfile, 'wb') as f:
         f.write(file_data)
     except Exception as e:
-      logging.error(f"Errore durante la scrittura del file {outfile}: {e}")
+      logging.error(f"Error while writing file {outfile}: {e}")
 
     files.append(outfile)
     offset += ENTRY_SIZE
   
-  logging.info(f"Decodifica completata, file salvati in {output_dir}")
+  logging.info(f"Decoding completed, files saved in {output_dir}")
 
   return files

@@ -6,7 +6,8 @@ import subprocess
 import lzma
 import Pupfile
 import ps4_dec_pup_info
-from pup_decrypt_tool import decrypt_pup  # Importa la funzione di decifrazione
+from pup_decrypt_tool import decrypt_pup  # Import the decryption function
+from ps4_dec_pup_info import extract_pup  # Import the extraction function
 
 # Define GUI
 gui = """
@@ -27,7 +28,7 @@ gui = """
                SO DON'T USE THIS FOR EVIL ACTIVITIES.
 """
 
-# Definisci la funzione per aprire la finestra di dialogo e selezionare il file .pup
+# Define the function to open the dialog and select the .pup file
 def select_file():
     root = Tk()
     root.withdraw()
@@ -43,75 +44,75 @@ class PupUnpacker:
         self.master = master
         master.title("Seregon PUP Unpacker")
 
-        # Etichetta del titolo
+        # Title label
         self.title_label = Label(master, text="Seregon PUP Unpacker")
         self.title_label.pack()
 
-        # Etichetta per mostrare il percorso del file selezionato
+        # Label to show the selected file path
         self.file_label = Label(master, text="")
         self.file_label.pack()
 
-        # Pulsante per selezionare il file
-        self.select_file_button = Button(master, text="Seleziona file", command=self.select_file)
+        # Button to select the file
+        self.select_file_button = Button(master, text="Select File", command=self.select_file)
         self.select_file_button.pack()
 
-        # Pulsante per estrarre i file
-        self.extract_button = Button(master, text="Estrai file", state=DISABLED, command=self.extract_pup)
+        # Button to extract the files
+        self.extract_button = Button(master, text="Extract Files", state=DISABLED, command=self.extract_pup)
         self.extract_button.pack()
 
     def select_file(self):
-        # Apre la finestra di dialogo per selezionare il file
+        # Open the dialog to select the file
         self.file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.PUP")])
-        # Aggiorna l'etichetta con il percorso del file selezionato
+        # Update the label with the selected file path
         self.file_label.configure(text=self.file_path)
-        # Abilita il pulsante per l'estrazione solo se il file selezionato ha estensione .pup
+        # Enable the extract button only if the selected file has a .pup extension
         if self.file_path.lower().endswith('.pup'):
             self.extract_button.configure(state=NORMAL)
         else:
             self.extract_button.configure(state=DISABLED)
 
     def extract_pup(self):
-        # Ottiene il percorso del file selezionato
+        # Get the selected file path
         file_path = self.file_label.cget('text')
 
         if not os.path.exists(file_path):
-            messagebox.showerror("Errore", f"Il file {file_path} non esiste.")
+            messagebox.showerror("Error", f"The file {file_path} does not exist.")
             return
 
-        # Estrai il magic number
+        # Extract the magic number
         try:
             magic = extract_magic_number(file_path)
-            print(f"Magic number estratto: {magic}")
+            print(f"Extracted magic number: {magic}")
         except Exception as e:
-            messagebox.showerror("Errore", f"Errore durante l'estrazione del magic number: {str(e)}")
+            messagebox.showerror("Error", f"Error extracting the magic number: {str(e)}")
             return
 
-        # Converti il file .PUP in .PUP.dec
+        # Convert the .PUP file to .PUP.dec
         try:
             dec_file_path = file_path + ".dec"
             decrypt_pup(file_path, dec_file_path)
         except RuntimeError as e:
-            messagebox.showerror("Errore", str(e))
+            messagebox.showerror("Error", str(e))
             return
 
-        # Crea una directory temporanea per l'estrazione dei file
+        # Create a temporary directory for extracting the files
         with tempfile.TemporaryDirectory() as temp_dir:
-            # Estrae i file dal file .PUP.dec nella directory temporanea
+            # Extract the files from the .PUP.dec file into the temporary directory
             try:
-                ps4_dec_pup_info.extract_pup(dec_file_path, temp_dir)
+                extract_pup(dec_file_path, temp_dir)
             except Exception as e:
-                messagebox.showerror("Errore", f"Errore durante l'estrazione del file {dec_file_path}: {str(e)}")
+                messagebox.showerror("Error", f"Error extracting the file {dec_file_path}: {str(e)}")
                 return
 
-            # Crea una directory con lo stesso nome del file .pup nella stessa cartella
-            # e salva i file estratti al suo interno
+            # Create a directory with the same name as the .pup file in the same folder
+            # and save the extracted files inside it
             dir_path = os.path.dirname(file_path)
             pup_name = os.path.splitext(os.path.basename(file_path))[0]
             pup_dir_path = os.path.join(dir_path, pup_name)
             if not os.path.exists(pup_dir_path):
                 os.makedirs(pup_dir_path)
 
-            # Continua con l'estrazione dei file
+            # Continue with extracting the files
             pup = Pupfile.Pupfile(dec_file_path)
             buffer = pup.get_buffer()
             for i, entry in enumerate(pup.entry_table):
@@ -125,18 +126,18 @@ class PupUnpacker:
                 entry_data_size = entry_compressed_size if entry_compression else entry_uncompressed_size
                 entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])
                 
-                # Calcola il nome del file e crea il percorso completo
+                # Calculate the file name and create the full path
                 file_name = f"{i:06d}.bin"
                 file_path = os.path.join(pup_dir_path, file_name)
                 
-                # Salva il file nella directory
+                # Save the file in the directory
                 with open(file_path, 'wb') as f:
                     f.write(entry_data)
 
-            # Mostra un messaggio di conferma all'utente
-            messagebox.showinfo("Informazione", "L'estrazione è stata completata con successo.")
+            # Show a confirmation message to the user
+            messagebox.showinfo("Information", "Extraction completed successfully.")
 
-# Esegue l'applicazione
+# Run the application
 if __name__ == '__main__':
     root = Tk()
     pup_unpacker = PupUnpacker(root)

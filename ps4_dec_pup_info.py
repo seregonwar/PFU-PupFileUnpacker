@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import struct
 import sys
+import os
 
 class Pup:
     __slots__ = ('MAGIC', 'VERSION', 'MODE', 'ENDIAN', 'FLAGS',
@@ -83,15 +84,14 @@ class Blob:
         self.COMPRESSED = 'True' if self.FLAGS & 0x8 == 0x8 else 'False'
         self.BLOCKED = 'True' if self.FLAGS & 0x800 == 0x800 else 'False'
         
-        print('')
-        print('0x%02X - %s' % (entry, self.TYPE))
-        print('  Flags:                0x%X' % self.FLAGS)
-        print('    Id:         0x%X' % self.ID)
-        print('    Compressed: %s' % self.COMPRESSED)
-        print('    Blocked:    %s' % self.BLOCKED)
-        print('  File Offset:          0x%X' % self.OFFSET)
-        print('  File Size:            0x%X' % self.FILE_SIZE)
-        print('  Memory Size:          0x%X' % self.MEMORY_SIZE)
+        print(f'\n0x{entry:02X} - {self.TYPE}')
+        print(f'  Flags:                0x{self.FLAGS:X}')
+        print(f'    Id:         0x{self.ID:X}')
+        print(f'    Compressed: {self.COMPRESSED}')
+        print(f'    Blocked:    {self.BLOCKED}')
+        print(f'  File Offset:          0x{self.OFFSET:X}')
+        print(f'  File Size:            0x{self.FILE_SIZE:X}')
+        print(f'  Memory Size:          0x{self.MEMORY_SIZE:X}')
     
     def get_type(self, blob_type):
         return {
@@ -160,6 +160,40 @@ class Blob:
             0xF02: '',  # watermark
             0xF03: '',  # watermark
         }.get(blob_type, 'Missing')
+
+def extract_pup(dec_file_path, output_dir):
+    try:
+        with open(dec_file_path, 'rb') as f:
+            pup = Pup(f)
+            for count, blob_instance in enumerate(pup.BLOBS):
+                try:
+                    blob_instance.__str__(count)
+                    # Extract blob data
+                    if blob_instance.OFFSET < 0 or blob_instance.FILE_SIZE < 0:
+                        raise ValueError(f"Invalid values for OFFSET or FILE_SIZE in blob {count}")
+                    
+                    # Add debug messages for OFFSET and FILE_SIZE values
+                    print(f"Blob {count}: OFFSET = {blob_instance.OFFSET}, FILE_SIZE = {blob_instance.FILE_SIZE}")
+
+                    # Limit OFFSET and FILE_SIZE values to avoid error
+                    max_offset = 2**63 - 1
+                    max_file_size = 2**63 - 1
+                    if blob_instance.OFFSET > max_offset or blob_instance.FILE_SIZE > max_file_size:
+                        raise ValueError(f"Values too large for OFFSET or FILE_SIZE in blob {count}")
+
+                    f.seek(blob_instance.OFFSET)
+                    data = f.read(min(blob_instance.FILE_SIZE, max_file_size))
+                    # Save extracted data
+                    output_file = os.path.join(output_dir, f"blob_{count:03d}.bin")
+                    with open(output_file, 'wb') as out_f:
+                        out_f.write(data)
+                except Exception as e:
+                    print(f"Error extracting blob {count}: {str(e)}")
+                    raise
+        print(f"Extraction completed. Files saved in {output_dir}")
+    except Exception as e:
+        print(f"Error extracting file {dec_file_path}: {str(e)}")
+        raise
 
 # PROGRAM START
 

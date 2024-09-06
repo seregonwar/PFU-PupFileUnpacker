@@ -24,41 +24,41 @@ def select_file():
 def extract_pup_file():
     file_path = select_file()
 
-    # Estrae il nome del file dalla path
+    # Extract the file name from the path
     pup_name = os.path.basename(file_path)
 
-    # Legge il contenuto del file in una variabile buffer
+    # Read the file content into a buffer
     with open(file_path, 'rb') as f:
         buffer = f.read()
 
-    # Controlla se il padding è corretto
+    # Check if the padding is correct
     padding_len = len(buffer) % 16
     if padding_len != 0:
-        raise ValueError(f"Il file {pup_name} non ha il padding corretto.")
+        raise ValueError(f"The file {pup_name} does not have the correct padding.")
 
-    # Estrae le informazioni dal buffer
+    # Extract information from the buffer
     magic = buffer[:8]
     version = buffer[8:12]
     mode = buffer[12:16]
     entry_table_offset = struct.unpack("<Q", buffer[32:40])[0]
     entry_table_count = struct.unpack("<I", buffer[48:52])[0]
 
-    # Controlla se il valore MAGIC è corretto
+    # Check if the MAGIC value is correct
     if magic != Pup.MAGIC:
-        raise ValueError(f"Il file {pup_name} non ha il valore MAGIC corretto.")
+        raise ValueError(f"The file {pup_name} does not have the correct MAGIC value.")
 
-    # Estrae la tabella delle entry
+    # Extract the entry table
     entry_table = []
     for i in range(entry_table_count):
         offset = entry_table_offset + i * 24
         entry = struct.unpack("<6sIHQQI", buffer[offset:offset+24])
         entry_table.append(entry)
 
-    # Crea un'istanza della classe Pup con le informazioni estratte dal buffer
+    # Create an instance of the Pup class with the extracted information
     pup = Pup(file_path, magic, version, mode, entry_table_offset, entry_table_count, entry_table)
 
-    # Crea una directory con lo stesso nome del file .pup nella stessa cartella
-    # e salva i file estratti al suo interno
+    # Create a directory with the same name as the .pup file in the same folder
+    # and save the extracted files inside it
     dir_path = os.path.dirname(file_path)
     pup_dir_path = os.path.join(dir_path, pup_name[:-4])
     if not os.path.exists(pup_dir_path):
@@ -79,16 +79,16 @@ def extract_pup_file():
         else:
             entry_data = buffer[entry_data_offset:entry_data_offset+entry_data_size]
 
-        # Calcola il nome del file e crea il percorso completo
+        # Calculate the file name and create the full path
         file_name = f"{i:06d}.bin"
         file_path = os.path.join(pup_dir_path, file_name)
 
-        # Salva il file nella directory
+        # Save the file in the directory
         with open(file_path, 'wb') as f:
             f.write(entry_data)
 
-    # Mostra un messaggio di conferma all'utente
-    messagebox.showinfo("Informazione", "L'estrazione è stata completata con successo.")
+    # Show a confirmation message to the user
+    messagebox.showinfo("Information", "Extraction completed successfully.")
 
 if __name__ == '__main__':
     extract_pup_file()
