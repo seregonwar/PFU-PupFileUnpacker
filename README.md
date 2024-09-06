@@ -1,84 +1,82 @@
+# PFU - PupFileUnziper
 
-# APFU - PS4 Pup File Extractor
-
-![Python 3.11](https://img.shields.io/badge/Python-3.11-blue) 
+![Python 3.11](https://img.shields.io/badge/Python-3.11-blue)
 ![Version](https://img.shields.io/badge/version-1.0-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/seregonwar/Pup-file-extractor?style=social)
 ![License](https://img.shields.io/badge/license-MIT-red)
 
-APFU è uno strumento Python per estrarre e analizzare i file di aggiornamento del firmware PS4 (PUP). Fornisce un modo semplice per decomprimere e ispezionare il contenuto dei pacchetti PUP.
+APFU is a Python tool for extracting and analyzing PS4 firmware update files (PUPs). It provides an easy way to unpack and inspect the contents of PUP packages.
 
-## Caratteristiche
+## Features
 
-- Estrae tutti i file e i metadati dagli archivi PUP
-- Stampa dettagli estesi sul contenuto del pacchetto, inclusi:
-  - Versione del firmware
-  - Numero di file contenuti
-  - Istruzioni di installazione
-  - Percorsi dei file
-  - Dimensioni dei file
-  - Hash SHA-256
-- Interfaccia grafica intuitiva per selezionare i file PUP da decomprimere
-- Salva i file estratti nella directory di output
-- Attivamente mantenuto e open source
+- Extracts all files and metadata from PUP archives
+- Prints extensive details about the package contents, including:
+- Firmware version
+- Number of files contained
+- Installation instructions
+- File paths
+- File sizes
+- SHA-256 hashes
+- Intuitive GUI to select PUP files to unpack
+- Saves extracted files to output directory
+- Actively maintained and open source
 
-## Utilizzo
+## Usage
 
-### Dipendenze
+### Dependencies
 
-APFU richiede Python 3 e i seguenti moduli:
+APFU requires Python 3 and the following modules:
 
 - tkinter
 - struct
 - lzma
 - pycryptodome
 
-Installa le dipendenze con:
+Install dependencies with:
 
 ```bash
 pip install tkinter struct lzma pycryptodome
 ```
 
-### Utilizzo di Base
+### Basic Usage
 
-1. Clona il repository GitHub:
-    ```bash
-    git clone https://github.com/seregonwar/Pup-file-extractor.git
-    ```
-2. Installa le dipendenze:
-    ```bash
-    pip install -r requirements.txt
-    ```
-3. Esegui lo script con:
-    ```bash
-    python pup_unpacker.py
-    ```
-4. Usa la finestra di dialogo per selezionare un file PUP.
-5. Il contenuto verrà estratto nella directory di lavoro.
+1. Clone the GitHub repository:
+```bash
+git clone https://github.com/seregonwar/Pup-file-extractor.git
+```
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+3. Run the script with:
+```bash
+python pup_unpacker.py
+```
+4. Use the dialog to select a PUP file.
+5. The content will be extracted to your working directory.
 
-### Utilizzo Avanzato
+### Advanced Usage
 
-Lo script `pup_unpacker.py` ha una documentazione estesa su tutte le funzioni e le classi. Gli sviluppatori possono facilmente integrare le funzionalità di estrazione PUP nelle proprie applicazioni.
+The `pup_unpacker.py` script has extensive documentation on all functions and classes. Developers can easily integrate the PUP extraction functionality into their applications.
 
-Consulta il [wiki](https://github.com/seregonwar/Pup-file-extractor/wiki) per ulteriori dettagli sull'utilizzo.
+See the [wiki](https://github.com/seregonwar/Pup-file-extractor/wiki) for more usage details.
 
-## Struttura del Progetto
+## Project Structure
 
-- `pup_unpacker.py`: Script principale con interfaccia grafica per selezionare e estrarre file PUP.
-- `pup_decrypt_tool.py`: Strumento per decrittare i file PUP.
-- `ps4_dec_pup_info.py`: Modulo per estrarre informazioni dai file PUP decifrati.
-- `pup_module.py`: Modulo per gestire la logica di estrazione dei file PUP.
-- `Pupfile.py`: Modulo per leggere e interpretare i file PUP.
+- `pup_unpacker.py`: Main GUI script to select and extract PUP files.
+- `pup_decrypt_tool.py`: Tool to decrypt PUP files.
+- `ps4_dec_pup_info.py`: Module to extract information from decrypted PUP files.
+- `pup_module.py`: Module to manage the PUP file extraction logic.
+- `Pupfile.py`: Module to read and interpret PUP files.
 
-## Crediti 
+## Credits
 
-La logica di estrazione PUP è stata adattata da [ps4_dec_pup_info](https://github.com/SocraticBliss/ps4_dec_pup_info) di [SocraticBliss](https://github.com/SocraticBliss).
+The PUP extraction logic was adapted from [ps4_dec_pup_info](https://github.com/SocraticBliss/ps4_dec_pup_info) by [SocraticBliss](https://github.com/SocraticBliss).
 
-## Licenza
+## License
 
-Questo progetto è concesso in licenza sotto la Licenza MIT - vedi il file [LICENSE](LICENSE) per i dettagli.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Disclaimer 
+## Disclaimer
 
 This tool is only for educational and investigative purposes. I am not responsible for any misuse or damage caused by this tool.
-
