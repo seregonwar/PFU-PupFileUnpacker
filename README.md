@@ -11,12 +11,12 @@ APFU is a Python tool for extracting and analyzing PS4 firmware update files (PU
 
 - Extracts all files and metadata from PUP archives
 - Prints extensive details about the package contents, including:
-- Firmware version
-- Number of files contained
-- Installation instructions
-- File paths
-- File sizes
-- SHA-256 hashes
+  - Firmware version
+  - Number of files contained
+  - Installation instructions
+  - File paths
+  - File sizes
+  - SHA-256 hashes
 - Intuitive GUI to select PUP files to unpack
 - Saves extracted files to output directory
 - Actively maintained and open source
@@ -41,17 +41,17 @@ pip install tkinter struct lzma pycryptodome
 ### Basic Usage
 
 1. Clone the GitHub repository:
-```bash
-git clone https://github.com/seregonwar/Pup-file-extractor.git
-```
+    ```bash
+    git clone https://github.com/seregonwar/Pup-file-extractor.git
+    ```
 2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+    ```bash
+    pip install -r requirements.txt
+    ```
 3. Run the script with:
-```bash
-python pup_unpacker.py
-```
+    ```bash
+    python pup_unpacker.py
+    ```
 4. Use the dialog to select a PUP file.
 5. The content will be extracted to your working directory.
 
@@ -68,6 +68,10 @@ See the [wiki](https://github.com/seregonwar/Pup-file-extractor/wiki) for more u
 - `ps4_dec_pup_info.py`: Module to extract information from decrypted PUP files.
 - `pup_module.py`: Module to manage the PUP file extraction logic.
 - `Pupfile.py`: Module to read and interpret PUP files.
+
+## Gui
+
+![GUI Screenshot](https://github.com/user-attachments/assets/3b0e7c7c-5740-42c2-ba12-0d5f163fce50?raw=true)
 
 ## Credits
 
