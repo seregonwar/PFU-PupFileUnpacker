@@ -146,12 +146,19 @@ class PupUnpacker:
         credits_frame = ctk.CTkFrame(self.main_frame)
         credits_frame.pack(pady=(30, 0))
 
-        self.credits_label = ctk.CTkLabel(credits_frame, text="Created by: SEREGON", font=("SF Pro", 14))
-        self.credits_label.pack(side="left", padx=(0, 20))
+        self.credits_label = ctk.CTkLabel(credits_frame, text="Created and developed by: SeregonWar Aka FixSeregonWar", font=("SF Pro", 14))
+        self.credits_label.pack(pady=(0, 10))
 
-        self.github_link = ctk.CTkLabel(credits_frame, text="Visit my GitHub", cursor="hand2", text_color="#4B8BBE", font=("SF Pro", 14))
-        self.github_link.pack(side="left")
+        links_frame = ctk.CTkFrame(credits_frame)
+        links_frame.pack()
+
+        self.github_link = ctk.CTkLabel(links_frame, text="Visit my GitHub", cursor="hand2", text_color="#4B8BBE", font=("SF Pro", 14))
+        self.github_link.pack(side="left", padx=(0, 10))
         self.github_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/seregonwar"))
+
+        self.hackerone_link = ctk.CTkLabel(links_frame, text="Visit my Activity on HackerOne", cursor="hand2", text_color="#4B8BBE", font=("SF Pro", 14))
+        self.hackerone_link.pack(side="left")
+        self.hackerone_link.bind("<Button-1>", lambda e: webbrowser.open("https://hackerone.com/fixseregonwar"))
 
         # Apply initial settings
         self.apply_settings()
@@ -312,16 +319,20 @@ class PupUnpacker:
                         
                         if not hasattr(blob_instance, 'OFFSET') or not hasattr(blob_instance, 'FILE_SIZE'):
                             invalid_blobs += 1
+                            self.log_to_console(f"Blob {count} non valido: attributi mancanti.")
                             continue
                         
                         if blob_instance.OFFSET < 0 or blob_instance.OFFSET >= file_size:
                             invalid_blobs += 1
+                            self.log_to_console(f"Blob {count} non valido: OFFSET fuori dai limiti.")
                             continue
                         if blob_instance.FILE_SIZE < 0 or blob_instance.FILE_SIZE > file_size:
                             invalid_blobs += 1
+                            self.log_to_console(f"Blob {count} non valido: FILE_SIZE fuori dai limiti.")
                             continue
                         if blob_instance.OFFSET + blob_instance.FILE_SIZE > file_size:
                             invalid_blobs += 1
+                            self.log_to_console(f"Blob {count} non valido: OFFSET + FILE_SIZE fuori dai limiti.")
                             continue
                         
                         f.seek(blob_instance.OFFSET)
@@ -337,6 +348,7 @@ class PupUnpacker:
                             self.master.update_idletasks()  # Aggiorna l'interfaccia utente
                     except Exception as e:
                         invalid_blobs += 1
+                        self.log_to_console(f"Errore durante l'elaborazione del blob {count}: {str(e)}")
                         if invalid_blobs % 100 == 0:
                             self.log_to_console(f"{invalid_blobs} blob non validi trovati")
                             self.master.update_idletasks()  # Aggiorna l'interfaccia utente
