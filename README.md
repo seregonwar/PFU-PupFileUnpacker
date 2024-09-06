@@ -1,4 +1,4 @@
-# APFU - PS4 Pup File Extractor
+# PFU - PupFileUnziper
 
 ![Python 3.11](https://img.shields.io/badge/Python-3.11-blue)
 ![Version](https://img.shields.io/badge/version-1.0-brightgreen)
