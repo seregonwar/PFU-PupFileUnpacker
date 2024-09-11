@@ -6,7 +6,7 @@ import os
 class Pup:
     __slots__ = ('MAGIC', 'VERSION', 'MODE', 'ENDIAN', 'FLAGS',
                  'CONTENT', 'PRODUCT', 'PADDING', 'HEADER_SIZE', 'META_SIZE',
-                 'FILE_SIZE', 'PADDING_2', 'BLOB_COUNT', 'FLAGS_2', 'PADDING_3')
+                 'FILE_SIZE', 'PADDING_2', 'BLOB_COUNT', 'FLAGS_2', 'PADDING_3', 'BLOBS')
     
     def __init__(self, f):
         self.MAGIC = struct.unpack('4B', f.read(4))
@@ -26,7 +26,7 @@ class Pup:
         self.PADDING_3 = struct.unpack('4x', f.read(4))
         
         # Blobs
-        Pup.BLOBS = [Blob(f) for _ in range(self.BLOB_COUNT)]
+        self.BLOBS = [Blob(f) for _ in range(self.BLOB_COUNT)]
         
         f.seek(0)
     
@@ -79,7 +79,7 @@ class Blob:
             self.FILE_SIZE = struct.unpack('<Q', f.read(8))[0]
             self.MEMORY_SIZE = struct.unpack('<Q', f.read(8))[0]
         except struct.error:
-            # Se non riusciamo a leggere tutti i dati, impostiamo valori non validi
+            # If we can't read all the data, set invalid values
             self.FLAGS = 0
             self.OFFSET = -1
             self.FILE_SIZE = 0
@@ -182,7 +182,7 @@ def extract_pup(dec_file_path, output_dir):
                     print(f"  FILE_SIZE: {blob_instance.FILE_SIZE}")
                     print(f"  MEMORY_SIZE: {blob_instance.MEMORY_SIZE}")
                     
-                    # Controlli di validità
+                    # Validity checks
                     if blob_instance.OFFSET < 0 or blob_instance.OFFSET >= file_size:
                         raise ValueError(f"Invalid OFFSET value for blob {count}")
                     if blob_instance.FILE_SIZE < 0 or blob_instance.FILE_SIZE > file_size:
@@ -190,20 +190,20 @@ def extract_pup(dec_file_path, output_dir):
                     if blob_instance.OFFSET + blob_instance.FILE_SIZE > file_size:
                         raise ValueError(f"OFFSET + FILE_SIZE exceeds file size for blob {count}")
                     
-                    # Estrazione del blob
+                    # Extract the blob
                     f.seek(blob_instance.OFFSET)
                     data = f.read(blob_instance.FILE_SIZE)
                     
-                    # Salvataggio del file estratto
+                    # Save the extracted file
                     output_file = os.path.join(output_dir, f"blob_{count:03d}.bin")
                     with open(output_file, 'wb') as out_f:
                         out_f.write(data)
-                    print(f"Blob {count} estratto con successo")
+                    print(f"Blob {count} extracted successfully")
                 except Exception as e:
-                    print(f"Errore nell'estrazione del blob {count}: {str(e)}")
-        print(f"Estrazione completata. File salvati in {output_dir}")
+                    print(f"Error extracting blob {count}: {str(e)}")
+        print(f"Extraction completed. Files saved in {output_dir}")
     except Exception as e:
-        print(f"Errore nell'estrazione del file {dec_file_path}: {str(e)}")
+        print(f"Error extracting file {dec_file_path}: {str(e)}")
         raise
 
 # PROGRAM START
@@ -216,7 +216,7 @@ def main(argc, argv):
     except IOError:
         raise SystemExit('\n  ERROR: Invalid Input File!!!')
     except IndexError:
-        raise SystemExit('\n  Utilizzo: python %s [PUPUPDATE#.PUP.dec]' % argv[0])
+        raise SystemExit('\n  Usage: python %s [PUPUPDATE#.PUP.dec]' % argv[0])
     
     for count, blob_instance in enumerate(PUP.BLOBS):
         blob_instance.__str__(count)

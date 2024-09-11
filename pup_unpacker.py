@@ -13,6 +13,7 @@ from PIL import Image, ImageTk
 import customtkinter as ctk
 import json
 import warnings
+import zlib
 
 # GUI Definition
 gui = """
@@ -96,12 +97,16 @@ class PupUnpacker:
         self.auto_update_switch.pack(side="top", padx=10, pady=5)
 
         # Logo
-        logo_image = Image.open("logo.png")
-        logo_image = logo_image.resize((200, 200), Image.Resampling.LANCZOS)  # Resize logo
-        logo_photo = ImageTk.PhotoImage(logo_image)
-        logo_label = ctk.CTkLabel(self.main_frame, image=logo_photo, text="")
-        logo_label.image = logo_photo
-        logo_label.pack(pady=(0, 20))
+        try:
+            logo_image = Image.open("logo.png")
+            logo_image = logo_image.resize((200, 200), Image.Resampling.LANCZOS)  # Resize logo
+            logo_photo = ImageTk.PhotoImage(logo_image)
+            logo_label = ctk.CTkLabel(self.main_frame, image=logo_photo, text="")
+            logo_label.image = logo_photo
+            logo_label.pack(pady=(0, 20))
+        except Exception as e:
+            self.log_to_console(f"Error loading logo: {str(e)}")
+            messagebox.showerror("Error", f"Error loading logo: {str(e)}")
 
         warnings.warn(f"{type(self).__name__} Warning: Given image is not CTkImage but {type(logo_photo)}. Image can not be scaled on HighDPI displays, use CTkImage instead.\n")
 
@@ -254,117 +259,146 @@ class PupUnpacker:
             json.dump(self.settings, f)
 
     def log_to_console(self, message):
-        self.console.configure(state='normal')
-        self.console.insert('end', message + '\n')
-        self.console.see('end')
-        self.console.configure(state='disabled')
-        self.master.update_idletasks()  # Force UI update
+        try:
+            self.console.configure(state='normal')
+            self.console.insert('end', message + '\n')
+            self.console.see('end')
+            self.console.configure(state='disabled')
+            self.master.update_idletasks()  # Force UI update
+        except Exception as e:
+            print(f"Error during logging: {str(e)}")
 
     def select_file(self):
-        file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.PUP")])
-        self.file_path.set(file_path)
-        if file_path.lower().endswith('.pup'):
-            self.extract_button.configure(state=NORMAL)
-            self.log_to_console(f"File selected: {file_path}")
-        else:
-            self.extract_button.configure(state=DISABLED)
-            self.log_to_console("Invalid file selected. Please choose a .PUP file.")
+        try:
+            file_path = filedialog.askopenfilename(filetypes=[("PUP files", "*.PUP")])
+            self.file_path.set(file_path)
+            if file_path.lower().endswith('.pup'):
+                self.extract_button.configure(state=NORMAL)
+                self.log_to_console(f"File selected: {file_path}")
+            else:
+                self.extract_button.configure(state=DISABLED)
+                self.log_to_console("Invalid file selected. Please choose a .PUP file.")
+        except Exception as e:
+            self.log_to_console(f"Error during file selection: {str(e)}")
+            messagebox.showerror("Error", f"Error during file selection: {str(e)}")
 
     def extract_pup(self):
         file_path = self.file_path.get()
 
         if not os.path.exists(file_path):
-            self.log_to_console(f"Errore: Il file {file_path} non esiste.")
-            messagebox.showerror("Errore", f"Il file {file_path} non esiste.")
+            self.log_to_console(f"Error: The file {file_path} does not exist.")
+            messagebox.showerror("Error", f"The file {file_path} does not exist.")
             return
 
         try:
             magic = extract_magic_number(file_path)
-            self.log_to_console(f"Numero magico estratto: {magic.hex()}")
+            self.log_to_console(f"Extracted magic number: {magic.hex()}")
         except Exception as e:
-            error_message = f"Errore nell'estrazione del numero magico: {str(e)}"
+            error_message = f"Error extracting magic number: {str(e)}"
             self.log_to_console(error_message)
-            messagebox.showerror("Errore", error_message)
+            messagebox.showerror("Error", error_message)
             return
 
         try:
             dec_file_path = file_path + ".dec"
-            self.log_to_console("Decrittazione del file PUP...")
+            self.log_to_console("Decrypting PUP file...")
             decrypt_pup(file_path, dec_file_path)
-            self.log_to_console("File PUP decrittato con successo.")
+            self.log_to_console("PUP file successfully decrypted.")
         except RuntimeError as e:
-            error_message = f"Errore nella decrittazione del file PUP: {str(e)}"
+            error_message = f"Error decrypting PUP file: {str(e)}"
             self.log_to_console(error_message)
-            messagebox.showerror("Errore", error_message)
+            messagebox.showerror("Error", error_message)
             return
 
         output_dir = os.path.join(os.path.dirname(file_path), "extracted_pup")
         os.makedirs(output_dir, exist_ok=True)
 
         try:
-            self.log_to_console("Estrazione dei file dal PUP decrittato...")
-            with open(dec_file_path, 'rb') as f:
-                pup = ps4_dec_pup_info.Pup(f)
-                file_size = os.path.getsize(dec_file_path)
-                self.log_to_console(f"Dimensione del file: {file_size} bytes")
-                self.log_to_console(f"Numero di blob: {pup.BLOB_COUNT}")
-                
-                valid_blobs = 0
-                invalid_blobs = 0
-                for count, blob_instance in enumerate(pup.BLOBS):
-                    try:
-                        if count % 100 == 0:
-                            self.log_to_console(f"Elaborazione del blob {count}...")
-                            self.master.update_idletasks()  # Aggiorna l'interfaccia utente
-                        
-                        if not hasattr(blob_instance, 'OFFSET') or not hasattr(blob_instance, 'FILE_SIZE'):
-                            invalid_blobs += 1
-                            self.log_to_console(f"Blob {count} non valido: attributi mancanti.")
-                            continue
-                        
-                        if blob_instance.OFFSET < 0 or blob_instance.OFFSET >= file_size:
-                            invalid_blobs += 1
-                            self.log_to_console(f"Blob {count} non valido: OFFSET fuori dai limiti.")
-                            continue
-                        if blob_instance.FILE_SIZE < 0 or blob_instance.FILE_SIZE > file_size:
-                            invalid_blobs += 1
-                            self.log_to_console(f"Blob {count} non valido: FILE_SIZE fuori dai limiti.")
-                            continue
-                        if blob_instance.OFFSET + blob_instance.FILE_SIZE > file_size:
-                            invalid_blobs += 1
-                            self.log_to_console(f"Blob {count} non valido: OFFSET + FILE_SIZE fuori dai limiti.")
-                            continue
-                        
-                        f.seek(blob_instance.OFFSET)
-                        data = f.read(blob_instance.FILE_SIZE)
-                        
-                        output_file = os.path.join(output_dir, f"blob_{count:03d}.bin")
-                        with open(output_file, 'wb') as out_f:
-                            out_f.write(data)
-                        
-                        valid_blobs += 1
-                        if valid_blobs % 100 == 0:
-                            self.log_to_console(f"{valid_blobs} blob validi estratti")
-                            self.master.update_idletasks()  # Aggiorna l'interfaccia utente
-                    except Exception as e:
-                        invalid_blobs += 1
-                        self.log_to_console(f"Errore durante l'elaborazione del blob {count}: {str(e)}")
-                        if invalid_blobs % 100 == 0:
-                            self.log_to_console(f"{invalid_blobs} blob non validi trovati")
-                            self.master.update_idletasks()  # Aggiorna l'interfaccia utente
-                
-                self.log_to_console(f"Estrazione completata. {valid_blobs} blob validi estratti, {invalid_blobs} blob non validi su {pup.BLOB_COUNT} totali.")
+            self.log_to_console("Extracting files from decrypted PUP...")
+            self.extract_internal_files(dec_file_path, output_dir)
+            self.log_to_console("Extraction completed successfully.")
         except Exception as e:
-            error_message = f"Errore nell'estrazione del file {dec_file_path}: {str(e)}"
+            error_message = f"Error extracting files from decrypted PUP: {str(e)}"
             self.log_to_console(error_message)
-            messagebox.showerror("Errore", error_message)
+            messagebox.showerror("Error", error_message)
             return
 
-        success_message = f"Estrazione completata con successo. File salvati in {output_dir}"
-        self.log_to_console(success_message)
-        messagebox.showinfo("Informazione", success_message)
+    def extract_internal_files(self, dec_file_path, output_dir):
+        try:
+            with open(dec_file_path, 'rb') as f:
+                pup = ps4_dec_pup_info.Pup(f)
+                for count, blob_instance in enumerate(pup.BLOBS):
+                    if blob_instance.OFFSET < 0 or blob_instance.OFFSET >= os.path.getsize(dec_file_path):
+                        self.log_to_console(f"Blob {count} is invalid: OFFSET out of bounds.")
+                        continue
+                    if blob_instance.FILE_SIZE < 0 or blob_instance.FILE_SIZE > os.path.getsize(dec_file_path):
+                        self.log_to_console(f"Blob {count} is invalid: FILE_SIZE out of bounds.")
+                        continue
+                    if blob_instance.OFFSET + blob_instance.FILE_SIZE > os.path.getsize(dec_file_path):
+                        self.log_to_console(f"Blob {count} is invalid: OFFSET + FILE_SIZE out of bounds.")
+                        continue
 
-if __name__ == '__main__':
+                    f.seek(blob_instance.OFFSET)
+                    data = f.read(blob_instance.FILE_SIZE)
+
+                    # Decompress if the file is compressed with zlib
+                    if blob_instance.FLAGS & 0x8:  # Check if the compression flag is set
+                        try:
+                            data = zlib.decompress(data)
+                            self.log_to_console(f"Blob {count} successfully decompressed.")
+                        except zlib.error as e:
+                            self.log_to_console(f"Error decompressing blob {count}: {str(e)}")
+                            continue
+
+                    output_file = os.path.join(output_dir, f"file_{count:03d}.bin")
+                    with open(output_file, 'wb') as out_f:
+                        out_f.write(data)
+                    self.log_to_console(f"File {count} successfully extracted: {output_file}")
+        except Exception as e:
+            self.log_to_console(f"Error extracting internal files: {str(e)}")
+            messagebox.showerror("Error", f"Error extracting internal files: {str(e)}")
+
+if __name__ == "__main__":
     root = ctk.CTk()
-    pup_unpacker = PupUnpacker(root)
+    app = PupUnpacker(root)
+    root.mainloop()
+
+    def extract_internal_files(self, dec_file_path, output_dir):
+        try:
+            with open(dec_file_path, 'rb') as f:
+                pup = ps4_dec_pup_info.Pup(f)
+                for count, blob_instance in enumerate(pup.BLOBS):
+                    if blob_instance.OFFSET < 0 or blob_instance.OFFSET >= os.path.getsize(dec_file_path):
+                        self.log_to_console(f"Blob {count} is invalid: OFFSET out of bounds.")
+                        continue
+                    if blob_instance.FILE_SIZE < 0 or blob_instance.FILE_SIZE > os.path.getsize(dec_file_path):
+                        self.log_to_console(f"Blob {count} is invalid: FILE_SIZE out of bounds.")
+                        continue
+                    if blob_instance.OFFSET + blob_instance.FILE_SIZE > os.path.getsize(dec_file_path):
+                        self.log_to_console(f"Blob {count} is invalid: OFFSET + FILE_SIZE out of bounds.")
+                        continue
+
+                    f.seek(blob_instance.OFFSET)
+                    data = f.read(blob_instance.FILE_SIZE)
+
+                    # Decompress if the file is compressed with zlib
+                    if blob_instance.FLAGS & 0x8:  # Check if the compression flag is set
+                        try:
+                            data = zlib.decompress(data)
+                            self.log_to_console(f"Blob {count} successfully decompressed.")
+                        except zlib.error as e:
+                            self.log_to_console(f"Error decompressing blob {count}: {str(e)}")
+                            continue
+
+                    output_file = os.path.join(output_dir, f"file_{count:03d}.bin")
+                    with open(output_file, 'wb') as out_f:
+                        out_f.write(data)
+                    self.log_to_console(f"File {count} successfully extracted: {output_file}")
+        except Exception as e:
+            self.log_to_console(f"Error extracting internal files: {str(e)}")
+            messagebox.showerror("Error", f"Error extracting internal files: {str(e)}")
+
+if __name__ == "__main__":
+    root = ctk.CTk()
+    app = PupUnpacker(root)
     root.mainloop()

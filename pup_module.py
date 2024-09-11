@@ -64,30 +64,22 @@ def extract_pup_file():
     if not os.path.exists(pup_dir_path):
         os.makedirs(pup_dir_path)
 
+    # Estrazione dei file interni
     for i, entry in enumerate(pup.entry_table):
-        entry_type = entry[0]
-        entry_flags = entry[1]
-        entry_compression = entry[2]
-        entry_uncompressed_size = entry[3]
-        entry_compressed_size = entry[4]
-        entry_hash = entry[5]
         entry_data_offset = entry[6]
-        entry_data_size = entry_compressed_size if entry_compression else entry_uncompressed_size
+        entry_data_size = entry[4] if entry[2] else entry[3]
 
-        if entry_compression:
-            entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry_compressed_size])
+        if entry[2]:
+            entry_data = lzma.decompress(buffer[entry_data_offset:entry_data_offset+entry[4]])
         else:
             entry_data = buffer[entry_data_offset:entry_data_offset+entry_data_size]
 
-        # Calculate the file name and create the full path
         file_name = f"{i:06d}.bin"
         file_path = os.path.join(pup_dir_path, file_name)
 
-        # Save the file in the directory
         with open(file_path, 'wb') as f:
             f.write(entry_data)
 
-    # Show a confirmation message to the user
     messagebox.showinfo("Information", "Extraction completed successfully.")
 
 if __name__ == '__main__':

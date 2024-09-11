@@ -6,48 +6,48 @@ BLOCK_SIZE = 512
 
 def read_pup_file(filepath):
     """
-    Legge un file PUP e restituisce le informazioni sui file contenuti.
+    Read a PUP file and return the information about the files contained.
 
     Parameters:
-    filepath (str): Percorso del file PUP
+    filepath (str): Path to the PUP file
 
     Returns:
-    dict: Informazioni sui file contenuti nel PUP
+    dict: Information about the files contained in the PUP
     """
-    # Apriamo il file in modalità binaria e leggiamo l'intero contenuto
+    # Open the file in binary mode and read the entire content
     with open(filepath, 'rb') as file:
         content = file.read()
 
-    # Verifichiamo che sia effettivamente un file PUP controllando i primi byte
+    # Verify that it is actually a PUP file by checking the first bytes
     if content[:4] != b'PUP ':
         raise ValueError("File is not a PUP file")
 
-    # Leggiamo l'header del file PUP
+    # Read the PUP file header
     header = content[:HEADER_SIZE]
 
-    # Estraiamo le informazioni dal header
+    # Extract information from the header
     magic, version_major, version_minor, file_count, flags, _ = struct.unpack('>4sHHHQ176s', header)
     magic = magic.decode('utf-8')
 
     if magic != 'PUP ':
         raise ValueError("File is not a PUP file")
 
-    # Creiamo una lista per contenere le informazioni sui file
+    # Create a list to contain the information about the files
     files = []
 
-    # Leggiamo le informazioni sui file contenute nel resto del file
+    # Read the information about the files contained in the rest of the file
     for i in range(file_count):
-        # Leggiamo l'entry table di ogni file
+        # Read the entry table of each file
         entry_table_offset = HEADER_SIZE + (i * 32)
         entry_table = content[entry_table_offset:entry_table_offset+32]
 
-        # Estraiamo le informazioni dall'entry table
+        # Extract information from the entry table
         file_offset, file_size = struct.unpack('>QQ', entry_table)
 
-        # Calcoliamo la posizione del blocco nel file
+        # Calculate the position of the block in the file
         block_offset = file_offset // BLOCK_SIZE
 
-        # Aggiungiamo le informazioni del file alla lista
+        # Add the file information to the list
         files.append({
             'offset': file_offset,
             'size': file_size,

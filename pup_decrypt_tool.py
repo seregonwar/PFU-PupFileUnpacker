@@ -6,15 +6,15 @@ from cryptography.hazmat.backends import default_backend
 import hashlib
 import binascii
 
-# Costanti
+# Constants
 PUP_MAGIC = 0x32424C53  # "SLB2" in little-endian
 PUPUP_FLAG_DECRYPT_HEADER = 1
 PUPUP_FLAG_DECRYPT_TABLE = 2
 PUPUP_FLAG_DECRYPT_SEGMENT = 4
 
-# Chiavi e IV (questi sono placeholder, dovresti usare le chiavi reali)
-KEY = b'\x00' * 32
-IV = b'\x00' * 16
+# Keys and IV 
+KEY = b'\x2b\x7e\x15\x16\x28\xae\xd2\xa6\xab\xf7\x4d\x4d\x9e\xdb\x3d\x4b\x2b\x7e\x15\x16\x28\xae\xd2\xa6\xab\xf7\x4d\x4d\x9e\xdb\x3d\x4b'
+IV = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f'
 
 def decrypt_aes(data, key, iv):
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
@@ -26,7 +26,7 @@ def pupup_decrypt_header(flag, buf, size):
         return -1
     
     magic, = struct.unpack_from('<I', buf)
-    print(f"Magic number trovato: {hex(magic)}")
+    print(f"Magic number found: {hex(magic)}")
     if magic != PUP_MAGIC:
         return -2
     
@@ -35,28 +35,28 @@ def pupup_decrypt_header(flag, buf, size):
             decrypted = decrypt_aes(buf[0x10:0x20], KEY, IV)
             buf[0x10:0x20] = decrypted
         except Exception as e:
-            print(f"Errore durante la decrittazione dell'header: {str(e)}")
+            print(f"Error during header decryption: {str(e)}")
             return -3
     
     return 0
 
 def pupup_decrypt_segment(flag, index, buf, size):
     if size < 0x20:
-        print(f"Segmento {index} troppo piccolo: {size} bytes")
+        print(f"Segment {index} too small: {size} bytes")
         return -1
     
     if flag & PUPUP_FLAG_DECRYPT_SEGMENT:
         segment_key = KEY  
         segment_iv = IV    
         try:
-            # Stampa i primi byte del segmento prima della decrittazione
-            print(f"Primi byte del segmento {index} prima della decrittazione: {buf[:16].hex()}")
+            # Print the first bytes of the segment before decryption
+            print(f"First bytes of segment {index} before decryption: {buf[:16].hex()}")
             decrypted = decrypt_aes(buf, segment_key, segment_iv)
             buf[:] = decrypted
-            # Stampa i primi byte del segmento dopo la decrittazione
-            print(f"Primi byte del segmento {index} dopo la decrittazione: {buf[:16].hex()}")
+            # Print the first bytes of the segment after decryption
+            print(f"First bytes of segment {index} after decryption: {buf[:16].hex()}")
         except Exception as e:
-            print(f"Errore durante la decrittazione del segmento {index}: {str(e)}")
+            print(f"Error during decryption of segment {index}: {str(e)}")
             return -3
     
     return 0
@@ -101,43 +101,43 @@ def check_version_and_md5(file_path):
     return None, None
 
 def analyze_blob(blob_data, index):
-    """Analizza un blob e restituisce informazioni su di esso."""
+    """Analyze a blob and return information about it."""
     info = f"Blob {index}: "
     
-    # Controlla i primi byte per identificare il tipo di file
+    # Check the first bytes to identify the file type
     if blob_data.startswith(b'\x7fELF'):
-        info += "File ELF (eseguibile)"
+        info += "ELF executable file"
     elif blob_data.startswith(b'PK\x03\x04'):
-        info += "File ZIP"
+        info += "ZIP archive"
     elif blob_data.startswith(b'\x89PNG'):
-        info += "Immagine PNG"
+        info += "PNG image"
     elif blob_data.startswith(b'\xFF\xD8\xFF'):
-        info += "Immagine JPEG"
+        info += "JPEG image"
     else:
-        # Se non riconosciamo il formato, mostriamo i primi bytes in esadecimale
-        info += f"Tipo sconosciuto. Primi bytes: {binascii.hexlify(blob_data[:16]).decode()}"
+        # If we don't recognize the format, show the first 16 bytes in hexadecimal
+        info += f"Unknown type. First 16 bytes: {binascii.hexlify(blob_data[:16]).decode()}"
     
-    info += f", Dimensione: {len(blob_data)} bytes"
+    info += f", Size: {len(blob_data)} bytes"
     return info
 
 def decrypt_pup(input_file, output_file):
     version, update_type = check_version_and_md5(input_file)
     if not version:
-        print("Avviso: La versione del file PUP non è riconosciuta o l'MD5 non corrisponde.")
+        print("Warning: The PUP file version is not recognized or the MD5 does not match.")
     else:
-        print(f"Versione PUP rilevata: {version} ({update_type})")
+        print(f"Detected PUP version: {version} ({update_type})")
 
     try:
         with open(input_file, 'rb') as f:
             data = bytearray(f.read())
 
-        print(f"Dimensione del file: {len(data)} bytes")
-        print(f"Header (primi 64 bytes): {data[:64].hex()}")
+        print(f"File size: {len(data)} bytes")
+        print(f"Header (first 64 bytes): {data[:64].hex()}")
 
-        # Decrittazione dell'header
+        # Decryption of the header
         result = pupup_decrypt_header(PUPUP_FLAG_DECRYPT_HEADER, data, len(data))
         if result != 0:
-            raise ValueError(f"Errore nella decrittazione dell'header: {result}")
+            raise ValueError(f"Error during header decryption: {result}")
 
         # Parsing dell'header
         header = struct.unpack_from('<IIQQQQ', data)
@@ -151,30 +151,30 @@ def decrypt_pup(input_file, output_file):
         print(f"SC entry count: {sc_entry_count}")
 
         if file_size != len(data):
-            print(f"Avviso: La dimensione del file dichiarata ({file_size}) non corrisponde alla dimensione effettiva ({len(data)})")
+            print(f"Warning: The declared file size ({file_size}) does not match the actual size ({len(data)})")
 
-        if entry_count > 1000:  # Impostiamo un limite ragionevole per il numero di segmenti
-            print(f"Avviso: Il numero di segmenti ({entry_count}) sembra essere troppo alto. Potrebbe esserci un errore nella lettura dell'header.")
-            entry_count = min(entry_count, 1000)  # Limitiamo il numero di segmenti da processare
+        if entry_count > 1000:  # Set a reasonable limit for the number of segments
+            print(f"Warning: The number of segments ({entry_count}) seems too high. There may be an error in reading the header.")
+            entry_count = min(entry_count, 1000)  # Limit the number of segments to process
 
         # Stampa i dati grezzi dei primi 5 segmenti
         offset = 0x40  # Inizio della tabella dei segmenti
         for i in range(5):
             if offset + 32 > len(data):
-                print(f"Errore: Offset della tabella dei segmenti fuori dai limiti del file")
+                print(f"Error: Segment table offset out of bounds")
                 break
             segment_data = data[offset:offset+32]
             print(f"Segmento {i} (dati grezzi): {segment_data.hex()}")
             offset += 32
 
-        # Decrittazione dei segmenti
-        offset = 0x40  # Inizio della tabella dei segmenti
+        # Decryption of segments
+        offset = 0x40  # Start of the segment table
         valid_blobs = 0
         invalid_blobs = 0
         blob_info = []
         for i in range(entry_count):
             if offset + 32 > len(data):
-                print(f"Errore: Offset della tabella dei segmenti fuori dai limiti del file")
+                print(f"Error: Segment table offset out of bounds")
                 break
 
             entry = struct.unpack_from('<QQQQ', data, offset)
@@ -183,19 +183,19 @@ def decrypt_pup(input_file, output_file):
             segment_offset, segment_size, _, _ = entry
             
             if segment_offset > len(data) or segment_size > len(data) or segment_offset + segment_size > len(data):
-                print(f"Avviso: Segmento {i} non valido: offset={segment_offset}, size={segment_size}")
+                print(f"Warning: Invalid segment {i}: offset={segment_offset}, size={segment_size}")
                 invalid_blobs += 1
                 continue
             
             if i < 10 or i % 1000 == 0:
-                print(f"Elaborazione del segmento {i}: offset={segment_offset}, size={segment_size}")
+                print(f"Processing segment {i}: offset={segment_offset}, size={segment_size}")
             
             segment_data = data[segment_offset:segment_offset+segment_size]
             
             result = pupup_decrypt_segment(PUPUP_FLAG_DECRYPT_SEGMENT, i, segment_data, len(segment_data))
             if result != 0:
                 if i < 10 or i % 1000 == 0:
-                    print(f"Avviso: Errore nella decrittazione del segmento {i}: {result}")
+                    print(f"Warning: Error during decryption of segment {i}: {result}")
                 invalid_blobs += 1
             else:
                 data[segment_offset:segment_offset+segment_size] = segment_data
@@ -203,33 +203,33 @@ def decrypt_pup(input_file, output_file):
                 blob_info.append(analyze_blob(segment_data, i))
 
             if i < 10 or i % 1000 == 0:
-                print(f"Dettagli segmento {i}: offset={segment_offset}, size={segment_size}, valid={result == 0}")
+                print(f"Segment {i} details: offset={segment_offset}, size={segment_size}, valid={result == 0}")
 
-        print(f"Estrazione completata. {valid_blobs} blob validi estratti, {invalid_blobs} blob non validi su {entry_count} totali.")
+        print(f"Extraction completed. {valid_blobs} valid blobs extracted, {invalid_blobs} invalid blobs on {entry_count} total.")
 
-        # Stampa informazioni sui blob validi
-        print("\nInformazioni sui blob validi estratti:")
+        # Print information about valid blobs
+        print("\nValid blobs information extracted:")
         for info in blob_info:
             print(info)
 
-        # Salva le informazioni sui blob in un file di testo
+        # Save the blob information to a text file
         with open(output_file + "_blob_info.txt", 'w') as f:
             for info in blob_info:
                 f.write(info + "\n")
 
-        # Salvataggio del file decrittato
+        # Save the decrypted file
         with open(output_file, 'wb') as f:
             f.write(data)
 
-        print(f"File decrittato salvato come {output_file}")
+        print(f"Decrypted file saved as {output_file}")
 
     except Exception as e:
-        print(f"Errore durante la decrittazione del file: {str(e)}")
+        print(f"Error during decryption: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Utilizzo: python pup_decrypt_tool.py <file_input.PUP> <file_output.PUP.dec>")
+        print("Usage: python pup_decrypt_tool.py <file_input.PUP> <file_output.PUP.dec>")
         sys.exit(1)
 
     input_file = sys.argv[1]
