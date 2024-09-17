@@ -80,3 +80,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Disclaimer
 
 This tool is only for educational and investigative purposes. I am not responsible for any misuse or damage caused by this tool.
+
+## State of development 
+The development of this software is currently at a standstill. The code is complete and partially fulfills its intended functionality, but I am seeking a way to decrypt all update files encrypted with AES-256. The PFU feature is finished, but it cannot fully and properly extract the files. If I had access to Sony’s encryption keys and integrated them into the code, the decryption process would be much simpler. I will continue to release patches to address any bugs.
