@@ -1,7 +1,7 @@
 # PFU - PupFileUnpacker
 
 ![Python 3.12](https://img.shields.io/badge/Python-3.12-blue)
-![Version](https://img.shields.io/badge/version-v1.5.0a-brightgreen)
+![Version](https://img.shields.io/badge/version-v1.5.1a-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/seregonwar/Pup-file-extractor?style=social)
 ![License](https://img.shields.io/badge/license-MIT-red)
 <p align="center">
