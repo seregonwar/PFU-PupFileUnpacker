@@ -1,6 +1,7 @@
 import os
 import sys
 import struct
+import zlib
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 import hashlib
@@ -8,6 +9,7 @@ import binascii
 
 # Constants
 PUP_MAGIC = 0x32424C53  # "SLB2" in little-endian
+NEW_PUP_MAGIC = 0x1D3D154F  # Nuovo valore magico trovato
 PUPUP_FLAG_DECRYPT_HEADER = 1
 PUPUP_FLAG_DECRYPT_TABLE = 2
 PUPUP_FLAG_DECRYPT_SEGMENT = 4
@@ -27,7 +29,8 @@ def pupup_decrypt_header(flag, buf, size):
     
     magic, = struct.unpack_from('<I', buf)
     print(f"Magic number found: {hex(magic)}")
-    if magic != PUP_MAGIC:
+    if magic not in [PUP_MAGIC, NEW_PUP_MAGIC]:
+        print(f"Error: Expected magic number {hex(PUP_MAGIC)} or {hex(NEW_PUP_MAGIC)}, but found {hex(magic)}")
         return -2
     
     if flag & PUPUP_FLAG_DECRYPT_HEADER:
@@ -68,8 +71,27 @@ def calculate_md5(file_path):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+def calculate_sha256(file_path):
+    hash_sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_sha256.update(chunk)
+    return hash_sha256.hexdigest()
+
+def calculate_crc32(file_path):
+    prev = 0
+    with open(file_path, "rb") as f:
+        for line in f:
+            prev = zlib.crc32(line, prev)
+    return format(prev & 0xFFFFFFFF, '08X')
+
 def check_version_and_md5(file_path):
     md5 = calculate_md5(file_path)
+    sha256 = calculate_sha256(file_path)
+    crc32 = calculate_crc32(file_path)
+    print(f"seg000:0000000000000000 ; Input SHA256 : {sha256.upper()}")
+    print(f"seg000:0000000000000000 ; Input MD5    : {md5.upper()}")
+    print(f"seg000:0000000000000000 ; Input CRC32  : {crc32.upper()}")
     versions = {
         "1.75": "401f1307e43d7fbb60c20dc8ad3497e4",
         "1.76": "a5234c6e8d37a57b374e24171173fbdd",
@@ -93,7 +115,8 @@ def check_version_and_md5(file_path):
         "4.01": "8b4ef90dc5994ba89028558030e31180",
         "4.05": "203c76c97f7be5b881dd0c77c8edf385",
         "4.06": "659190bc39c174350b6c322af0f0ded5",
-        "4.07": "908b5f52e82c36536707844df67961d8"
+        "4.07": "908b5f52e82c36536707844df67961d8",
+        "NewVersion": "566AD272E73534806D553AAE978A8DBE"  # Aggiunto nuovo MD5
     }
     for version, expected_md5 in versions.items():
         if md5 == expected_md5:

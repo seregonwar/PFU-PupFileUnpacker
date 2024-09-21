@@ -14,6 +14,10 @@ import customtkinter as ctk
 import json
 import warnings
 import zlib
+import threading
+import queue
+import tkinter.ttk as ttk  # Aggiunto per Treeview
+import tkinter as tk
 
 # GUI Definition
 gui = """
@@ -39,6 +43,15 @@ def extract_magic_number(file_path):
         magic = f.read(4)
     return magic
 
+def decrypt_pup_file(file_path):
+    try:
+        dec_file_path = file_path + ".dec"
+        decrypt_pup(file_path, dec_file_path)
+        return dec_file_path
+    except Exception as e:
+        messagebox.showerror("Error", f"Error decrypting PUP file: {str(e)}")
+        return None
+
 class PupUnpacker:
     def __init__(self, master):
         self.master = master
@@ -54,7 +67,7 @@ class PupUnpacker:
         
         # Main frame
         self.main_frame = ctk.CTkFrame(master)
-        self.main_frame.pack(expand=True, fill='both', padx=30, pady=30)
+        self.main_frame.pack(expand=True, fill='both', padx=20, pady=20)
 
         # Settings frame
         self.settings_frame = ctk.CTkFrame(self.main_frame)
@@ -165,6 +178,67 @@ class PupUnpacker:
         self.hackerone_link.pack(side="left")
         self.hackerone_link.bind("<Button-1>", lambda e: webbrowser.open("https://hackerone.com/fixseregonwar"))
 
+        # Sezione per mostrare le informazioni del file PUP
+        self.info_frame = ctk.CTkFrame(self.main_frame)
+        self.info_frame.pack(fill="x", pady=(0, 20))
+        
+        self.version_label = ctk.CTkLabel(self.info_frame, text="Versione: --", font=("SF Pro", 14))
+        self.version_label.pack(anchor="w", padx=10, pady=2)
+        
+        self.magic_label = ctk.CTkLabel(self.info_frame, text="Magic Value: --", font=("SF Pro", 14))
+        self.magic_label.pack(anchor="w", padx=10, pady=2)
+        
+        self.other_info_label = ctk.CTkLabel(self.info_frame, text="Altre Info: --", font=("SF Pro", 14))
+        self.other_info_label.pack(anchor="w", padx=10, pady=2)
+        
+        # Aggiunta della lista dei file estratti
+        self.extracted_files_frame = ctk.CTkFrame(self.main_frame)
+        self.extracted_files_frame.pack(fill="both", expand=True, pady=(0, 20))
+
+        self.extracted_files_label = ctk.CTkLabel(self.extracted_files_frame, text="File Estratti:", font=("SF Pro", 16, "bold"))
+        self.extracted_files_label.pack(anchor="w", padx=10, pady=(0, 5))
+
+        self.extracted_files_listbox = ctk.CTkTextbox(self.extracted_files_frame, height=150, state='disabled', font=("SF Pro", 12))
+        self.extracted_files_listbox.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+
+        # Bottone per aprire la directory di output
+        self.open_output_button = ctk.CTkButton(self.main_frame, text="Apri Directory Output", command=self.open_output_directory, font=("SF Pro", 14), width=200)
+        self.open_output_button.pack(pady=(0, 20))
+
+        # Configurazione della console con threading per log in tempo reale
+        self.log_queue = queue.Queue()
+        self.log_thread = threading.Thread(target=self.process_log_queue, daemon=True)
+        self.log_thread.start()
+
+        # Aggiunta della Treeview per esplorare le directory estratte
+        self.tree_frame = ctk.CTkFrame(self.main_frame)
+        self.tree_frame.pack(fill="both", expand=True, pady=(0, 20))
+        
+        self.tree_label = ctk.CTkLabel(self.tree_frame, text="Esplora Estratti:", font=("SF Pro", 16, "bold"))
+        self.tree_label.pack(anchor="w", padx=10, pady=(0, 5))
+        
+        self.tree = ttk.Treeview(self.tree_frame)
+        self.tree.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        
+        # Aggiungi scrollbar alla Treeview
+        self.tree_scrollbar = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
+        self.tree_scrollbar.pack(side='right', fill='y')
+        self.tree.configure(yscrollcommand=self.tree_scrollbar.set)
+        
+   
+
+        # Configura le colonne della Treeview
+        self.tree["columns"] = ("Name", "Type", "Size")
+        self.tree.column("#0", width=0, stretch=tk.NO)
+        self.tree.column("Name", anchor=tk.W, width=300)
+        self.tree.column("Type", anchor=tk.W, width=100)
+        self.tree.column("Size", anchor=tk.E, width=100)
+        
+        self.tree.heading("#0", text="", anchor=tk.W)
+        self.tree.heading("Name", text="Nome", anchor=tk.W)
+        self.tree.heading("Type", text="Tipo", anchor=tk.W)
+        self.tree.heading("Size", text="Dimensione (bytes)", anchor=tk.E)
+        
         # Apply initial settings
         self.apply_settings()
 
@@ -259,14 +333,16 @@ class PupUnpacker:
             json.dump(self.settings, f)
 
     def log_to_console(self, message):
-        try:
+        self.log_queue.put(message)
+
+    def process_log_queue(self):
+        while True:
+            message = self.log_queue.get()
             self.console.configure(state='normal')
             self.console.insert('end', message + '\n')
             self.console.see('end')
             self.console.configure(state='disabled')
-            self.master.update_idletasks()  # Force UI update
-        except Exception as e:
-            print(f"Error during logging: {str(e)}")
+            self.log_queue.task_done()
 
     def select_file(self):
         try:
@@ -293,6 +369,7 @@ class PupUnpacker:
         try:
             magic = extract_magic_number(file_path)
             self.log_to_console(f"Extracted magic number: {magic.hex()}")
+            self.magic_label.configure(text=f"Magic Value: {magic.hex()}")
         except Exception as e:
             error_message = f"Error extracting magic number: {str(e)}"
             self.log_to_console(error_message)
@@ -300,9 +377,21 @@ class PupUnpacker:
             return
 
         try:
-            dec_file_path = file_path + ".dec"
+            # Estrai le informazioni del file PUP
+            pup_info = Pupfile.read_pup_file(file_path)
+            version = f"{pup_info['version_major']}.{pup_info['version_minor']}"
+            self.version_label.configure(text=f"Versione: {version}")
+            self.other_info_label.configure(text=f"Numero di File: {pup_info['file_count']}")
+        except Exception as e:
+            self.log_to_console(f"Error reading PUP info: {str(e)}")
+            self.version_label.configure(text="Versione: --")
+            self.other_info_label.configure(text="Altre Info: --")
+        
+        try:
             self.log_to_console("Decrypting PUP file...")
-            decrypt_pup(file_path, dec_file_path)
+            dec_file_path = decrypt_pup_file(file_path)
+            if not dec_file_path:
+                return
             self.log_to_console("PUP file successfully decrypted.")
         except RuntimeError as e:
             error_message = f"Error decrypting PUP file: {str(e)}"
@@ -317,6 +406,7 @@ class PupUnpacker:
             self.log_to_console("Extracting files from decrypted PUP...")
             self.extract_internal_files(dec_file_path, output_dir)
             self.log_to_console("Extraction completed successfully.")
+            self.update_extracted_files_list(output_dir)
         except Exception as e:
             error_message = f"Error extracting files from decrypted PUP: {str(e)}"
             self.log_to_console(error_message)
@@ -329,13 +419,13 @@ class PupUnpacker:
                 pup = ps4_dec_pup_info.Pup(f)
                 for count, blob_instance in enumerate(pup.BLOBS):
                     if blob_instance.OFFSET < 0 or blob_instance.OFFSET >= os.path.getsize(dec_file_path):
-                        self.log_to_console(f"Blob {count} is invalid: OFFSET out of bounds.")
+                        self.log_to_console(f"Warning: Invalid segment {count}: offset={blob_instance.OFFSET}, size={blob_instance.FILE_SIZE}")
                         continue
                     if blob_instance.FILE_SIZE < 0 or blob_instance.FILE_SIZE > os.path.getsize(dec_file_path):
-                        self.log_to_console(f"Blob {count} is invalid: FILE_SIZE out of bounds.")
+                        self.log_to_console(f"Warning: Invalid segment {count}: offset={blob_instance.OFFSET}, size={blob_instance.FILE_SIZE}")
                         continue
                     if blob_instance.OFFSET + blob_instance.FILE_SIZE > os.path.getsize(dec_file_path):
-                        self.log_to_console(f"Blob {count} is invalid: OFFSET + FILE_SIZE out of bounds.")
+                        self.log_to_console(f"Warning: Invalid segment {count}: offset={blob_instance.OFFSET}, size={blob_instance.FILE_SIZE}")
                         continue
 
                     f.seek(blob_instance.OFFSET)
@@ -358,45 +448,58 @@ class PupUnpacker:
             self.log_to_console(f"Error extracting internal files: {str(e)}")
             messagebox.showerror("Error", f"Error extracting internal files: {str(e)}")
 
-if __name__ == "__main__":
-    root = ctk.CTk()
-    app = PupUnpacker(root)
-    root.mainloop()
+    def update_extracted_files_list(self, output_dir):
+        self.extracted_files_listbox.configure(state='normal')
+        self.extracted_files_listbox.delete('1.0', 'end')
+        for root_dir, dirs, files in os.walk(output_dir):
+            for file in files:
+                file_path = os.path.join(root_dir, file)
+                self.extracted_files_listbox.insert('end', f"{file_path}\n")
+        self.extracted_files_listbox.configure(state='disabled')
 
-    def extract_internal_files(self, dec_file_path, output_dir):
-        try:
-            with open(dec_file_path, 'rb') as f:
-                pup = ps4_dec_pup_info.Pup(f)
-                for count, blob_instance in enumerate(pup.BLOBS):
-                    if blob_instance.OFFSET < 0 or blob_instance.OFFSET >= os.path.getsize(dec_file_path):
-                        self.log_to_console(f"Blob {count} is invalid: OFFSET out of bounds.")
-                        continue
-                    if blob_instance.FILE_SIZE < 0 or blob_instance.FILE_SIZE > os.path.getsize(dec_file_path):
-                        self.log_to_console(f"Blob {count} is invalid: FILE_SIZE out of bounds.")
-                        continue
-                    if blob_instance.OFFSET + blob_instance.FILE_SIZE > os.path.getsize(dec_file_path):
-                        self.log_to_console(f"Blob {count} is invalid: OFFSET + FILE_SIZE out of bounds.")
-                        continue
+        # Popola la Treeview
+        self.populate_treeview(output_dir)
 
-                    f.seek(blob_instance.OFFSET)
-                    data = f.read(blob_instance.FILE_SIZE)
+    def populate_treeview(self, output_dir):
+        # Pulisci la Treeview
+        for item in self.tree.get_children():
+            self.tree.delete(item)
 
-                    # Decompress if the file is compressed with zlib
-                    if blob_instance.FLAGS & 0x8:  # Check if the compression flag is set
-                        try:
-                            data = zlib.decompress(data)
-                            self.log_to_console(f"Blob {count} successfully decompressed.")
-                        except zlib.error as e:
-                            self.log_to_console(f"Error decompressing blob {count}: {str(e)}")
-                            continue
+        # Funzione ricorsiva per aggiungere nodi
+        def add_nodes(parent, path):
+            for entry in os.listdir(path):
+                entry_path = os.path.join(path, entry)
+                if os.path.isdir(entry_path):
+                    node = self.tree.insert(parent, 'end', text=entry, values=(entry, "Directory", ""))
+                    add_nodes(node, entry_path)
+                else:
+                    size = os.path.getsize(entry_path)
+                    ext = os.path.splitext(entry_path)[1].lower()
+                    file_type = self.get_file_type(ext)
+                    self.tree.insert(parent, 'end', text=entry, values=(entry, file_type, size))
 
-                    output_file = os.path.join(output_dir, f"file_{count:03d}.bin")
-                    with open(output_file, 'wb') as out_f:
-                        out_f.write(data)
-                    self.log_to_console(f"File {count} successfully extracted: {output_file}")
-        except Exception as e:
-            self.log_to_console(f"Error extracting internal files: {str(e)}")
-            messagebox.showerror("Error", f"Error extracting internal files: {str(e)}")
+        add_nodes('', output_dir)
+
+    def get_file_type(self, ext):
+        types = {
+            '.bin': 'Binario',
+            '.exe': 'Eseguibile',
+            '.dll': 'Library',
+            '.png': 'Immagine',
+            '.jpg': 'Immagine',
+            '.jpeg': 'Immagine',
+            '.txt': 'Testo',
+            '.xml': 'XML',
+            # Aggiungi altri tipi secondo necessità
+        }
+        return types.get(ext, 'Altro')
+
+    def open_output_directory(self):
+        output_dir = os.path.join(os.path.dirname(self.file_path.get()), "extracted_pup")
+        if os.path.exists(output_dir):
+            webbrowser.open(f'file://{os.path.realpath(output_dir)}')
+        else:
+            messagebox.showerror("Error", "La directory di output non esiste.")
 
 if __name__ == "__main__":
     root = ctk.CTk()
