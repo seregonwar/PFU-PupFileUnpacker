@@ -13,6 +13,9 @@
 PFU is a Python tool for extracting and analyzing PS4 firmware update files (PUPs). It provides an easy way to unpack and inspect the contents of PUP packages.
 </p>
 
+## Donation
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/seregon)
 ## Features
 
 - Extracts all files and metadata from PUP archives
