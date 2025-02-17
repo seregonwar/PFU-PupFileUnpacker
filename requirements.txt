@@ -1,5 +1,5 @@
 lzma==0.5.3
-numpy==2.2.0
+numpy==2.2.3
 pip==24.3.1
 ps4-dec-pup-info==1.0
 pup-decoder==0.1.0
