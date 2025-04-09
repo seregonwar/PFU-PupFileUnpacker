@@ -39,7 +39,7 @@ PFU is a Python tool for extracting and analyzing PS4 firmware update files (PUP
 
 PFU requires Python 3 and the following modules:
 
-- tkinter
+- PyQt6
 - struct
 - lzma
 - pycryptodome
@@ -47,14 +47,14 @@ PFU requires Python 3 and the following modules:
 Install dependencies with:
 
 ```bash
-pip install tkinter struct lzma pycryptodome
+pip install -r requirements.txt
 ```
 
 ### Basic Usage
 
 1. Clone the GitHub repository:
 ```bash
-git clone https://github.com/seregonwar/Pup-file-extractor.git
+git clone https://github.com/seregonwar/PFU-PupFileUnpacker.git
 ```
 2. Install dependencies:
 ```bash
@@ -62,7 +62,7 @@ pip install -r requirements.txt
 ```
 3. Run the script with:
 ```bash
-python pup_unpacker.py
+python src/main.py
 ```
 4. Use the dialog to select a PUP file.
 5. The content will be extracted to your working directory.
@@ -75,11 +75,11 @@ See the [wiki](https://github.com/seregonwar/Pup-file-extractor/wiki) for more u
 
 ## Project Structure
 
-- `pup_unpacker.py`: Main GUI script to select and extract PUP files.
-- `pup_decrypt_tool.py`: Tool to decrypt PUP files.
-- `ps4_dec_pup_info.py`: Module to extract information from decrypted PUP files.
-- `pup_module.py`: Module to manage the PUP file extraction logic.
-- `Pupfile.py`: Module to read and interpret PUP files.
+- `core`: Application core and implementation of basic functions.
+- `crypto`:Crypto util for reading and extraction from LBS2 container.
+- `gui`: A graphical interface using PyQt6, it consists of only one module.
+- `utils`: Error and file upload management.
+- `main.py`: Main entry of the program.
 
 ## Credits
 
@@ -94,4 +94,7 @@ This project is licensed under the GNU License - see the [LICENSE](LICENSE) file
 This tool is only for educational and investigative purposes. I am not responsible for any misuse or damage caused by this tool.
 
 ## State of development 
-The development of this software is currently at a standstill. The code is complete and partially fulfills its intended functionality, but I am seeking a way to decrypt all update files encrypted with AES-256. The PFU feature is finished, but it cannot fully and properly extract the files. If I had access to Sony’s encryption keys and integrated them into the code, the decryption process would be much simpler. I will continue to release patches to address any bugs.
+The development of this software is currently at a standstill. The code is complete and partially fulfills its intended functionality, but I am seeking a way to decrypt all update files encrypted with AES-128. The PFU feature is finished, but it cannot fully and properly extract the files. If I had access to Sony’s encryption keys and integrated them into the code, the decryption process would be much simpler. I will continue to release patches to address any bugs.
+
+### 09/04/2025
+The project has little likelihood of being continued, and the latest commits I have made are nothing more than minor improvements to the program because it lacked stability and, above all, had a bad structure in that it was not very modular and not much was understood about how it worked. It still remains a very good program for educational purposes, I find no other use in a program that does 30%(to be good) of what it was designed to do. 
