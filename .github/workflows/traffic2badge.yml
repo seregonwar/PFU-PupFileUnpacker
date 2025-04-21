@@ -1,23 +1,21 @@
-name: traffic2badge
+name: Generate Traffic Badges
 
 on:
   schedule:
     - cron: '0 */12 * * *'  # ogni 12 ore
-  workflow_dispatch:        # esecuzione manuale
+  workflow_dispatch:
   push:
     branches:
       - main
 
 jobs:
-  run:
-    name: Make GitHub Traffic to Badge
+  generate:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set Traffic
+      - name: Generate traffic badges
         id: traffic
         uses: yi-Xu-0100/traffic-to-badge@main
         with:
@@ -25,15 +23,15 @@ jobs:
           repositories: seregonwar/PFU-PupFileUnpacker
           year: 2024
 
-      - name: Deploy to GH Pages
-        uses: peaceiris/actions-gh-pages@v3.9.3
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: ${{ steps.traffic.outputs.traffic_branch }}
           publish_dir: ${{ steps.traffic.outputs.traffic_path }}
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
-          full_commit_message: ${{ github.event.head_commit.message }}
+          full_commit_message: 'Deploy traffic badges'
 
       - name: Show Traffic Data
         run: |
