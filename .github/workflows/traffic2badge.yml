@@ -1,0 +1,42 @@
+name: traffic2badge
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'  # ogni 12 ore
+  workflow_dispatch:        # esecuzione manuale
+  push:
+    branches:
+      - main
+
+jobs:
+  run:
+    name: Make GitHub Traffic to Badge
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set Traffic
+        id: traffic
+        uses: yi-Xu-0100/traffic-to-badge@main
+        with:
+          token: ${{ secrets.TRAFFIC_TOKEN }}
+          repositories: seregonwar/PFU-PupFileUnpacker
+          year: 2024
+
+      - name: Deploy to GH Pages
+        uses: peaceiris/actions-gh-pages@v3.9.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: ${{ steps.traffic.outputs.traffic_branch }}
+          publish_dir: ${{ steps.traffic.outputs.traffic_path }}
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          full_commit_message: ${{ github.event.head_commit.message }}
+
+      - name: Show Traffic Data
+        run: |
+          echo "Branch: ${{ steps.traffic.outputs.traffic_branch }}"
+          echo "Path: ${{ steps.traffic.outputs.traffic_path }}"
+          ls -la ${{ steps.traffic.outputs.traffic_path }}
