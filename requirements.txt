@@ -3,6 +3,6 @@ numpy==2.2.0
 pip==24.3.1
 ps4-dec-pup-info==1.0
 pup-decoder==0.1.0
-setuptools==79.0.0
+setuptools==80.0.0
 struct==1.20
 Tkinter==3.10
