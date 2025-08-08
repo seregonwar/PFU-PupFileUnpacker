@@ -1,3 +1,4 @@
-setuptools==79.0.0
-struct==1.20
-Tkinter==3.10
+setuptools>=79.0.0
+PyQt6
+pycryptodome
+cryptography
