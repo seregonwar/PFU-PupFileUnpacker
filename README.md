@@ -67,6 +67,21 @@ python src/main.py
 4. Use the dialog to select a PUP file.
 5. The content will be extracted to your working directory.
 
+---
+
+### How to use in linux:
+
+1. Save the file as `linux.sh`
+2. Make it executable:
+   ```bash
+   chmod +x install_pfu.sh
+   ```
+3. Run it:
+   ```bash
+   ./install_pfu.sh
+   ```
+
+---
 ### Advanced Usage
 
 The `pup_unpacker.py` script has extensive documentation on all functions and classes. Developers can easily integrate the PUP extraction functionality into their applications.
@@ -98,3 +113,4 @@ The development of this software is currently at a standstill. The code is compl
 
 ### 09/04/2025
 The project has little likelihood of being continued, and the latest commits I have made are nothing more than minor improvements to the program because it lacked stability and, above all, had a bad structure in that it was not very modular and not much was understood about how it worked. It still remains a very good program for educational purposes, I find no other use in a program that does 30%(to be good) of what it was designed to do. 
+
