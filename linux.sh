@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script Name: install_pfu.sh
+# Script Name: linux.sh
 # Purpose: Automatic setup for PFU-PupFileUnpacker
 # Compatibility: Debian, Ubuntu, Linux Mint, and similar distros
 
