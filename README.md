@@ -1,7 +1,7 @@
 # PFU - PupFileUnpacker
 
 ![Python 3.12](https://img.shields.io/badge/Python-3.12+-blue)
-![Version](https://img.shields.io/badge/version-v1.5.1b-brightgreen)
+![Version](https://img.shields.io/badge/version-v1.6.0b-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/seregonwar/Pup-file-extractor?style=social)
 ![License](https://img.shields.io/badge/license-MIT-red)
 ![Github All Releases](https://img.shields.io/github/downloads/seregonwar/PFU-PupFileUnpacker/total.svg)
@@ -113,4 +113,5 @@ The development of this software is currently at a standstill. The code is compl
 
 ### 09/04/2025
 The project has little likelihood of being continued, and the latest commits I have made are nothing more than minor improvements to the program because it lacked stability and, above all, had a bad structure in that it was not very modular and not much was understood about how it worked. It still remains a very good program for educational purposes, I find no other use in a program that does 30%(to be good) of what it was designed to do. 
+
 
