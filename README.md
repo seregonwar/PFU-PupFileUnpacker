@@ -4,7 +4,7 @@
 ![Version](https://img.shields.io/badge/version-v1.6.0b-brightgreen)
 ![GitHub stars](https://img.shields.io/github/stars/seregonwar/Pup-file-extractor?style=social)
 ![License](https://img.shields.io/badge/license-MIT-red)
-![Github All Releases](https://img.shields.io/github/downloads/seregonwar/PFU-PupFileUnpacker/total.svg)
+[![Github All Releases](https://img.shields.io/github/downloads/seregonwar/PFU-PupFileUnpacker/total.svg)]()
 <p align="center">
   <a href="https://github.com/seregonwar/PFU-PupFileUnpacker/blob/main/logo.png">
     <img alt="PFU" src="logo.png" width="300" />
